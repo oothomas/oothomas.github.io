@@ -1,3 +1,13 @@
 remote_theme: pages-themes/minimal@v0.2.0
 plugins:
 - jekyll-remote-theme # add this line to the plugins list if you already have one
+
+title: "Oshane O. Thomas, PhD"
+description: "Biological Anthropologist | Researcher | Data Scientist"
+url: "https://oothomas.github.io"
+author:
+  name: "Oshane O. Thomas"
+  email: "oothomas07@gmail.com"
+  links:
+    - label: LinkedIn
+      url: "https://www.linkedin.com/in/oshane-o-thomas"
