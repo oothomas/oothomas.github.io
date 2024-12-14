@@ -13,3 +13,4 @@ theme: jekyll-theme-modernist
 # Optional: If you plan on adding plugins or extra functionality, you can include them here.
 plugins:
   - jekyll-feed
+  - jekyll-remote-theme # add this line to the plugins list if you already have one
