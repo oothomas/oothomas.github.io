@@ -1,14 +1,15 @@
-remote_theme: mmistakes/minimal-mistakes
-plugins:
-  - jekyll-include-cache
-  - jekyll-remote-theme
-  
 title: "Oshane O. Thomas, PhD"
 description: "Biological Anthropologist | Researcher | Data Scientist"
 url: "https://oothomas.github.io"
-author:
+author: 
   name: "Oshane O. Thomas"
   email: "oothomas07@gmail.com"
   links:
-    - label: LinkedIn
+    - label: "LinkedIn"
       url: "https://www.linkedin.com/in/oshane-o-thomas"
+
+theme: jekyll-theme-modernist
+
+# Optional: If you plan on adding plugins or extra functionality, you can include them here.
+plugins:
+  - jekyll-feed
