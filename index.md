@@ -1,10 +1,15 @@
 ---
-layout: home
-title: "Welcome to My Professional Portfolio"
+layout: default
+title: "Home"
 ---
 
-# Hi, I’m Oshane O. Thomas, PhD.
+# Oshane O. Thomas, PhD
 
-Welcome to my professional portfolio. Here you’ll find my CV, research projects, and interactive demos of my work.
+**Biological Anthropologist | Researcher | Data Scientist**
 
-Check out my [CV](/cv/) or explore my [Projects](/projects/).
+Welcome to my professional portfolio. I focus on analyzing 3D morphological data, applying machine learning and deep learning techniques to understand evolutionary processes. Here, you can find details about my background, research projects, publications, and interactive demos.
+
+- [Curriculum Vitae](/cv/)
+- [Projects](/projects/)
+
+Feel free to explore and reach out if you have any questions.
