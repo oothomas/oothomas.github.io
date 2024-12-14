@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Projects"
-permalink: /cv/
+permalink: /projects/
 ---
 
 # Projects
