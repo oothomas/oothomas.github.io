@@ -2,9 +2,6 @@
 layout: default
 title: "Home"
 ---
-
-# Oshane O. Thomas, PhD
-
 **Biological Anthropologist & Machine Learning Scientist**
 
 I specialize in computational anatomy, automated shape analysis, and statistical modeling of biological form. By leveraging deep learning and 3D visualization tools, I extract meaningful patterns from complex anatomical datasets, driving insights in evolutionary biology, comparative morphology, and clinical research applications.
