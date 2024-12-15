@@ -64,4 +64,4 @@ Computational anatomist and machine learning scientist with extensive experience
 
 ---
 **Download Full CV:**  
-[Click here to download my full CV as a PDF](assets/docs/Thomas_Oshane_CV.pdf)
+[Click here to download my full CV as a PDF](/assets/docs/Thomas_Oshane_CV.pdf)
