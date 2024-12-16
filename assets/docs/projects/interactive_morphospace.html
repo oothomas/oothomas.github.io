@@ -48,7 +48,7 @@
       yaxis: { title: 'PC2' }
     });
 
-    // VTK.js Viewer
+    // Import VTK.js dependencies
     const vtkFullScreenRenderWindow = vtk.Rendering.Misc.vtkFullScreenRenderWindow;
     const vtkSphereSource = vtk.Filters.Sources.vtkSphereSource;
     const vtkCubeSource = vtk.Filters.Sources.vtkCubeSource;
@@ -56,16 +56,17 @@
     const vtkMapper = vtk.Rendering.Core.vtkMapper;
     const vtkActor = vtk.Rendering.Core.vtkActor;
 
+    // VTK.js FullScreen Render Window
     const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
       rootContainer: document.getElementById('vtk-container'),
-      background: [0.2, 0.3, 0.4],
+      background: [0.95, 0.95, 0.95], // Light gray background
     });
 
     const renderer = fullScreenRenderer.getRenderer();
     const renderWindow = fullScreenRenderer.getRenderWindow();
 
-    // Function to create a source, mapper, and actor
-    function createShape(SourceType, color, position) {
+    // Utility function to create a shape
+    function createVTKShape(SourceType, color, position) {
       const source = SourceType.newInstance();
       const mapper = vtkMapper.newInstance();
       const actor = vtkActor.newInstance();
@@ -78,11 +79,12 @@
       renderer.addActor(actor);
     }
 
-    // Create shapes
-    createShape(vtkSphereSource, [0, 0, 1], [-2, 0, 0]);   // Blue Sphere
-    createShape(vtkCubeSource, [1, 0, 0], [0, 0, 0]);      // Red Cube
-    createShape(vtkConeSource, [1, 1, 0], [2, 0, 0]);      // Yellow Pyramid
+    // Create VTK shapes
+    createVTKShape(vtkSphereSource, [0, 0, 1], [-2, 0, 0]);  // Blue Sphere
+    createVTKShape(vtkCubeSource, [1, 0, 0], [0, 0, 0]);     // Red Cube
+    createVTKShape(vtkConeSource, [1, 1, 0], [2, 0, 0]);     // Yellow Pyramid
 
+    // Render the scene
     renderer.resetCamera();
     renderWindow.render();
   </script>
