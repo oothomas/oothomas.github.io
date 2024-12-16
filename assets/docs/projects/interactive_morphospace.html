@@ -3,17 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interactive Morphospace Viewer</title>
-  <!-- Plotly.js -->
+  <title>Interactive Morphospace Tool</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <!-- vtk.js -->
   <script src="https://unpkg.com/@kitware/vtk.js"></script>
-  <!-- Custom Styles -->
   <style>
     body { font-family: Arial, sans-serif; margin: 0; }
     #app-container { display: flex; height: 100vh; }
     #scatter-container, #model-viewer { flex: 1; border: 1px solid #ccc; }
-    #steps { text-align: center; margin-top: 10px; }
+    h3 { text-align: center; margin: 10px 0; }
+    #scatter-plot, #vtk-container { height: 90%; }
   </style>
 </head>
 <body>
@@ -30,39 +28,63 @@
       <div id="vtk-container"></div>
     </div>
   </div>
-  <div id="steps">
-    <p><strong>Steps:</strong> Choose Source → Target → Generate Deformation</p>
-  </div>
 
   <!-- JavaScript -->
   <script>
-    // Sample data for Plotly scatter plot
+    // Scatter Plot with Plotly
     const scatterData = {
-      x: [-30, -20, -10, 0, 10, 20, 30],
-      y: [-15, -5, 0, 5, 10, 15, 25],
-      mode: 'markers',
+      x: [-20, -10, 0, 10, 20],
+      y: [-10, 0, 10, 20, 30],
+      mode: 'markers+text',
       type: 'scatter',
-      marker: { size: 10, color: 'red' }
+      marker: { size: 10, color: 'red' },
+      text: ['10', '15', '20', '25', '30'],
+      textposition: 'top center'
     };
 
-    // Plotly Setup
     Plotly.newPlot('scatter-plot', [scatterData], {
       title: 'Morphospace (PC1 vs PC2)',
       xaxis: { title: 'PC1' },
       yaxis: { title: 'PC2' }
     });
 
-    // Event Listeners
-    const vtkContainer = document.getElementById('vtk-container');
-    vtkContainer.innerHTML = "<p>VTK.js Viewer Here</p>"; // Placeholder
+    // VTK.js Viewer
+    const vtkFullScreenRenderWindow = vtk.Rendering.Misc.vtkFullScreenRenderWindow;
+    const vtkSphereSource = vtk.Filters.Sources.vtkSphereSource;
+    const vtkCubeSource = vtk.Filters.Sources.vtkCubeSource;
+    const vtkConeSource = vtk.Filters.Sources.vtkConeSource;
+    const vtkMapper = vtk.Rendering.Core.vtkMapper;
+    const vtkActor = vtk.Rendering.Core.vtkActor;
 
-    // Handle Scatter Point Selection
-    document.getElementById('scatter-plot').on('plotly_click', (event) => {
-      const x = event.points[0].x;
-      const y = event.points[0].y;
-      alert(`Point selected: (${x}, ${y})`);
-      // Fetch VTK data or update 3D viewer here
+    const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+      rootContainer: document.getElementById('vtk-container'),
+      background: [0.2, 0.3, 0.4],
     });
+
+    const renderer = fullScreenRenderer.getRenderer();
+    const renderWindow = fullScreenRenderer.getRenderWindow();
+
+    // Function to create a source, mapper, and actor
+    function createShape(SourceType, color, position) {
+      const source = SourceType.newInstance();
+      const mapper = vtkMapper.newInstance();
+      const actor = vtkActor.newInstance();
+
+      mapper.setInputConnection(source.getOutputPort());
+      actor.setMapper(mapper);
+      actor.getProperty().setColor(...color);
+      actor.setPosition(...position);
+
+      renderer.addActor(actor);
+    }
+
+    // Create shapes
+    createShape(vtkSphereSource, [0, 0, 1], [-2, 0, 0]);   // Blue Sphere
+    createShape(vtkCubeSource, [1, 0, 0], [0, 0, 0]);      // Red Cube
+    createShape(vtkConeSource, [1, 1, 0], [2, 0, 0]);      // Yellow Pyramid
+
+    renderer.resetCamera();
+    renderWindow.render();
   </script>
 </body>
 </html>
