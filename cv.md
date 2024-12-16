@@ -5,7 +5,7 @@ permalink: /cv/
 ---
 
 # Oshane O. Thomas, PhD  
-Seattle, WA | (***) *** - **** | [Gmail](mailto:oothomas07@gmail.com) | [LinkedIn](https://www.linkedin.com/in/oshane-o-thomas)
+Seattle, WA | [Gmail](mailto:oothomas07@gmail.com) | [LinkedIn](https://www.linkedin.com/in/oshane-o-thomas)
 
 ## Summary
 Computational anatomist and machine learning scientist with extensive experience in 3D shape analysis, automated landmark acquisition, and deep learning pipelines for morphological and clinical data. Skilled in transforming high-dimensional imaging datasets into quantitative, interpretable phenotypes to advance research in evolutionary biology, comparative morphology, and healthcare applications.

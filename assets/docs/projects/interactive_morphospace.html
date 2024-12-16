@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Morphospace Viewer</title>
+  <!-- Plotly.js -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <!-- vtk.js -->
+  <script src="https://unpkg.com/@kitware/vtk.js"></script>
+  <!-- Custom Styles -->
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; }
+    #app-container { display: flex; height: 100vh; }
+    #scatter-container, #model-viewer { flex: 1; border: 1px solid #ccc; }
+    #steps { text-align: center; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1 style="text-align: center;">Interactive Morphospace Tool</h1>
+  <div id="app-container">
+    <!-- Scatter Plot Container -->
+    <div id="scatter-container">
+      <h3>PC1 vs PC2</h3>
+      <div id="scatter-plot"></div>
+    </div>
+    <!-- VTK Viewer Container -->
+    <div id="model-viewer">
+      <h3>3D Model Viewer</h3>
+      <div id="vtk-container"></div>
+    </div>
+  </div>
+  <div id="steps">
+    <p><strong>Steps:</strong> Choose Source → Target → Generate Deformation</p>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    // Sample data for Plotly scatter plot
+    const scatterData = {
+      x: [-30, -20, -10, 0, 10, 20, 30],
+      y: [-15, -5, 0, 5, 10, 15, 25],
+      mode: 'markers',
+      type: 'scatter',
+      marker: { size: 10, color: 'red' }
+    };
+
+    // Plotly Setup
+    Plotly.newPlot('scatter-plot', [scatterData], {
+      title: 'Morphospace (PC1 vs PC2)',
+      xaxis: { title: 'PC1' },
+      yaxis: { title: 'PC2' }
+    });
+
+    // Event Listeners
+    const vtkContainer = document.getElementById('vtk-container');
+    vtkContainer.innerHTML = "<p>VTK.js Viewer Here</p>"; // Placeholder
+
+    // Handle Scatter Point Selection
+    document.getElementById('scatter-plot').on('plotly_click', (event) => {
+      const x = event.points[0].x;
+      const y = event.points[0].y;
+      alert(`Point selected: (${x}, ${y})`);
+      // Fetch VTK data or update 3D viewer here
+    });
+  </script>
+</body>
+</html>
