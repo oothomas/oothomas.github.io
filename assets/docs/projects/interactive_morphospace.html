@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Morphospace Visualization Tool</title>
+  <title>Morphospace Visualization Tool (No Pan/Zoom)</title>
 
   <!-- 1) Plotly for 2D scatter plot -->
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -85,8 +85,8 @@
 
     /* Loading spinner overlay */
     #spinner {
-      display: none;          /* hidden initially */
-      position: fixed;        /* covers the entire page */
+      display: none;
+      position: fixed;
       top: 0; left: 0;
       width: 100%;
       height: 100%;
@@ -121,7 +121,7 @@
 <body>
 
 <!-- Page Title -->
-<h1>Morphospace Visualization Tool</h1>
+<h1>Morphospace Visualization Tool (No Pan/Zoom)</h1>
 
 <!-- Control Buttons & Selectors -->
 <div class="controls">
@@ -213,10 +213,10 @@
 // ------------------------------------------------------
 // GLOBALS
 // ------------------------------------------------------
-let pcaData = null;          // Nx15 from server
-let specimenIds = null;      // Nx1
-let groups = null;           // Nx1 => group name
-let xPCIndex=0, yPCIndex=1;  // which PC dims for the scatter
+let pcaData = null;
+let specimenIds = null;
+let groups = null;
+let xPCIndex=0, yPCIndex=1;
 
 // For picking source/target
 let selectingSource=false;
@@ -250,7 +250,6 @@ function enableButton(id, enable) {
   else       btn.classList.add("disabled");
 }
 
-// Return 15 zeros
 function zeroedPCArray() {
   return new Array(15).fill(0);
 }
@@ -262,7 +261,6 @@ function eucDist(a,b) {
   return Math.sqrt(dx*dx + dy*dy + dz*dz);
 }
 
-// Display source/target in #infoBox
 function updateInfoBox() {
   const ib = document.getElementById('infoBox');
   const sx= sourceCoord? sourceCoord[0].toFixed(3) : '--';
@@ -272,7 +270,6 @@ function updateInfoBox() {
   ib.innerHTML = `Source: (${sx}, ${sy})<br/>Target: (${tx}, ${ty})`;
 }
 
-// Compute button is only enabled if sourcePC + targetPC are set
 function updateComputeBtnState() {
   enableButton("computeBtn", (sourcePC && targetPC));
 }
@@ -286,7 +283,6 @@ function showSpinner(show) {
 // ------------------------------------------------------
 // CLEARING
 // ------------------------------------------------------
-// Remove user picks
 function clearSourceTarget() {
   selectingSource=false;
   selectingTarget=false;
@@ -299,7 +295,6 @@ function clearSourceTarget() {
   redrawPlot();
 }
 
-// Remove old VTK shapes but keep the same scene
 function clearVTKShapes() {
   if(renderer && vtkActor) {
     renderer.removeActor(vtkActor);
@@ -317,7 +312,6 @@ function clearVTKShapes() {
   }
 }
 
-// Reset arrays from previous interpolation
 function resetInterpolationData() {
   serverAlignedShapes=null;
   faces=null;
@@ -337,7 +331,7 @@ document.getElementById('fetchDataBtn').onclick = async()=>{
     if(!resp.ok) throw new Error(`Fetch error: ${resp.status}`);
     const data = await resp.json();
 
-    pcaData = data.components;    // Nx15
+    pcaData = data.components;
     specimenIds = data.specimen_ids;
 
     // Build groups (e.g., "Mouse"/"Peromyscus")
@@ -391,14 +385,28 @@ function plotDataByGroup() {
     });
   }
 
+  // The key: dragmode 'none' => no pan/zoom box or select
   layout = {
     title: `PCA Morphospace (PC${xPCIndex+1} vs PC${yPCIndex+1})`,
     hovermode: 'closest',
-    showlegend: true
+    showlegend: true,
+    dragmode: 'none'
   };
 
   plotDiv = document.getElementById('plotlyDiv');
-  Plotly.newPlot(plotDiv, groupTraces, layout, {});
+
+  // config removes zoom/pan buttons
+  const config = {
+    displayModeBar: true,      // show the top bar
+    scrollZoom: false,         // no scroll zoom
+    modeBarButtonsToRemove: [
+      'zoom2d','pan2d','select2d','lasso2d',
+      'autoScale2d','zoomIn2d','zoomOut2d','resetScale2d'
+    ],
+    displaylogo: false         // remove Plotly logo
+  };
+
+  Plotly.newPlot(plotDiv, groupTraces, layout, config);
 
   plotDiv.addEventListener('mousedown', onPlotMousedown);
 }
@@ -546,7 +554,16 @@ function redrawPlot(){
     });
   }
 
-  Plotly.react(plotDiv, data, layout, {});
+  // Pass the same config to keep the mode bar stripped out
+  Plotly.react(plotDiv, data, layout, {
+    displayModeBar: true,
+    scrollZoom: false,
+    modeBarButtonsToRemove: [
+      'zoom2d','pan2d','select2d','lasso2d',
+      'autoScale2d','zoomIn2d','zoomOut2d','resetScale2d'
+    ],
+    displaylogo: false
+  });
 }
 
 // ------------------------------------------------------
@@ -730,7 +747,8 @@ function updateDisplayedVariant(index){
 
   const scalarsData= new Float32Array(errs);
   const scalars= vtk.Common.Core.vtkDataArray.newInstance({
-    name:'Error', values: scalarsData
+    name:'Error',
+    values: scalarsData
   });
   polyData.getPointData().setScalars(scalars);
 
