@@ -1,92 +1,245 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interactive Morphospace Tool</title>
+  <title>Interactive Morphospace</title>
+
+  <!-- 1) Plotly for 2D scatter plot interactions -->
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <script src="https://unpkg.com/@kitware/vtk.js"></script>
+
+  <!-- 2) VTK.js or Three.js for 3D mesh visualization -->
+  <!-- Example using VTK.js: -->
+  <script src="https://unpkg.com/vtk.js"></script>
+
+  <!-- (Optional) your own CSS for styling -->
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; }
-    #app-container { display: flex; height: 100vh; }
-    #scatter-container, #model-viewer { flex: 1; border: 1px solid #ccc; }
-    h3 { text-align: center; margin: 10px 0; }
-    #scatter-plot, #vtk-container { height: 90%; }
+    #plotlyDiv {
+      width: 600px;
+      height: 500px;
+      margin-bottom: 20px;
+    }
+    #vtkContainer {
+      width: 800px;
+      height: 600px;
+      background-color: #f0f0f0;
+    }
   </style>
 </head>
 <body>
-  <h1 style="text-align: center;">Interactive Morphospace Tool</h1>
-  <div id="app-container">
-    <!-- Scatter Plot Container -->
-    <div id="scatter-container">
-      <h3>PC1 vs PC2</h3>
-      <div id="scatter-plot"></div>
-    </div>
-    <!-- VTK Viewer Container -->
-    <div id="model-viewer">
-      <h3>3D Model Viewer</h3>
-      <div id="vtk-container"></div>
-    </div>
-  </div>
 
-  <!-- JavaScript -->
+  <h1>Interactive Morphospace</h1>
+
+  <p>Click the button to load PCA data from the API, then pick a source and target point from the scatter plot.</p>
+
+  <button id="fetchDataBtn">Fetch PCA Data</button>
+  <div id="plotlyDiv"></div>
+
+  <button id="sourceBtn">Set Source Point</button>
+  <button id="targetBtn">Set Target Point</button>
+  <button id="computeBtn">Compute & Interpolate</button>
+
+  <p>Use the slider to browse through the resulting interpolated shapes:</p>
+  <input type="range" id="variantSlider" min="0" max="10" value="0" step="1" style="width: 800px;" />
+
+  <div id="vtkContainer"></div>
+
+  <!-- 3) Your custom JS code -->
   <script>
-    // Scatter Plot with Plotly
-    const scatterData = {
-      x: [-20, -10, 0, 10, 20],
-      y: [-10, 0, 10, 20, 30],
-      mode: 'markers+text',
-      type: 'scatter',
-      marker: { size: 10, color: 'red' },
-      text: ['10', '15', '20', '25', '30'],
-      textposition: 'top center'
-    };
+    // Some global variables
+    let pcaData = null;
+    let sourcePoint = null;
+    let targetPoint = null;
+    let selectingSource = false;
+    let selectingTarget = false;
+    let decodedShapes = null;   // for storing the array of shape vertices
+    let faces = null;           // array of face indices
+    let vtkActor = null;        // VTK.js actor for reusing geometry
+    let renderer = null;
+    let renderWindow = null;
+    let slider = null;
 
-    Plotly.newPlot('scatter-plot', [scatterData], {
-      title: 'Morphospace (PC1 vs PC2)',
-      xaxis: { title: 'PC1' },
-      yaxis: { title: 'PC2' }
-    });
+    // (A) Fetch PCA data from the API (e.g. /get-initial)
+    async function fetchPCAData() {
+      try {
+        const resp = await fetch("https://3.138.141.8:443/get-initial", { method: 'GET' });
+        if (!resp.ok) {
+          throw new Error(`API error: ${resp.statusText}`);
+        }
+        const jsonData = await resp.json();
+        pcaData = jsonData.components; // Nx15
+        console.log("Received PCA Data", pcaData);
 
-    // Import VTK.js dependencies
-    const vtkFullScreenRenderWindow = vtk.Rendering.Misc.vtkFullScreenRenderWindow;
-    const vtkSphereSource = vtk.Filters.Sources.vtkSphereSource;
-    const vtkCubeSource = vtk.Filters.Sources.vtkCubeSource;
-    const vtkConeSource = vtk.Filters.Sources.vtkConeSource;
-    const vtkMapper = vtk.Rendering.Core.vtkMapper;
-    const vtkActor = vtk.Rendering.Core.vtkActor;
-
-    // VTK.js FullScreen Render Window
-    const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
-      rootContainer: document.getElementById('vtk-container'),
-      background: [0.95, 0.95, 0.95], // Light gray background
-    });
-
-    const renderer = fullScreenRenderer.getRenderer();
-    const renderWindow = fullScreenRenderer.getRenderWindow();
-
-    // Utility function to create a shape
-    function createVTKShape(SourceType, color, position) {
-      const source = SourceType.newInstance();
-      const mapper = vtkMapper.newInstance();
-      const actor = vtkActor.newInstance();
-
-      mapper.setInputConnection(source.getOutputPort());
-      actor.setMapper(mapper);
-      actor.getProperty().setColor(...color);
-      actor.setPosition(...position);
-
-      renderer.addActor(actor);
+        plotPCAScatter(pcaData);
+      } catch (err) {
+        alert("Failed to fetch PCA data: " + err.message);
+      }
     }
 
-    // Create VTK shapes
-    createVTKShape(vtkSphereSource, [0, 0, 1], [-2, 0, 0]);  // Blue Sphere
-    createVTKShape(vtkCubeSource, [1, 0, 0], [0, 0, 0]);     // Red Cube
-    createVTKShape(vtkConeSource, [1, 1, 0], [2, 0, 0]);     // Yellow Pyramid
+    // (B) Plot the PCA data using Plotly (e.g. PC1 vs PC2)
+    function plotPCAScatter(components) {
+      const xVals = components.map(row => row[0]); // PC1
+      const yVals = components.map(row => row[1]); // PC2
 
-    // Render the scene
-    renderer.resetCamera();
-    renderWindow.render();
+      const trace = {
+        x: xVals,
+        y: yVals,
+        mode: 'markers',
+        type: 'scatter',
+        marker: { size: 6 }
+      };
+
+      const layout = { 
+        title: 'PCA Morphospace (PC1 vs PC2)',
+        xaxis: { title: 'PC1' },
+        yaxis: { title: 'PC2' }
+      };
+
+      Plotly.newPlot('plotlyDiv', [trace], layout);
+
+      // Register a click event on the scatter plot
+      const plotDiv = document.getElementById('plotlyDiv');
+      plotDiv.on('plotly_click', function(data){
+        // data.points is an array of clicked points
+        const xVal = data.points[0].x;
+        const yVal = data.points[0].y;
+
+        // If user toggled "Set Source" or "Set Target" button:
+        if (selectingSource) {
+          sourcePoint = [xVal, yVal];
+          alert(`Source point set: (${xVal}, ${yVal})`);
+          selectingSource = false;
+        } else if (selectingTarget) {
+          targetPoint = [xVal, yVal];
+          alert(`Target point set: (${xVal}, ${yVal})`);
+          selectingTarget = false;
+        }
+      });
+    }
+
+    // (C) Post source + target data for interpolation and parse result
+    async function computeInterpolation() {
+      if (!sourcePoint || !targetPoint) {
+        alert("Please set both Source and Target points first!");
+        return;
+      }
+
+      // Build the pc_scores payload (only using PC1 & PC2 in this example, rest = 0)
+      const pcScores = [
+        [ sourcePoint[0], sourcePoint[1], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+        [ targetPoint[0], targetPoint[1], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+      ];
+
+      const payload = { pc_scores: pcScores };
+
+      try {
+        const resp = await fetch("https://3.138.141.8:443/interpolate", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!resp.ok) {
+          throw new Error(`Interpolation error: ${resp.statusText}`);
+        }
+        const interpResult = await resp.json();
+        decodedShapes = interpResult.shapes;  // NxVx3
+        faces = interpResult.faces;           // Fx3
+        console.log("Interpolation result", decodedShapes, faces);
+
+        // If needed, handle error arrays similarly:
+        // let errors = get_errors(decodedShapes[0], decodedShapes);
+
+        // Initialize VTK scene if not already done
+        setupVTKScene();
+        // Show shape #0 initially
+        updateDisplayedVariant(0);
+
+        // Adjust the slider bounds
+        slider = document.getElementById('variantSlider');
+        slider.max = decodedShapes.length - 1;
+        slider.value = 0;
+      } catch (err) {
+        alert("Compute interpolation failed: " + err.message);
+        console.error(err);
+      }
+    }
+
+    // (D) Setup VTK scene once. We'll reuse the same scene/actor.
+    function setupVTKScene() {
+      if (renderer) {
+        // Already initialized
+        return;
+      }
+      const fullScreenRenderer = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
+        rootContainer: document.getElementById('vtkContainer'),
+        containerStyle: { width: '100%', height: '100%', position: 'relative' }
+      });
+      renderWindow = fullScreenRenderer.getRenderWindow();
+      renderer = fullScreenRenderer.getRenderer();
+
+      // Create a single polydata mapper/actor we’ll re-populate
+      const mapper = vtk.Rendering.Core.vtkMapper.newInstance();
+      vtkActor = vtk.Rendering.Core.vtkActor.newInstance();
+      vtkActor.setMapper(mapper);
+      renderer.addActor(vtkActor);
+      renderer.resetCamera();
+    }
+
+    // (E) Convert the selected variant’s points/faces into a vtkPolyData and attach to the actor
+    function updateDisplayedVariant(index) {
+      if (!decodedShapes || index < 0 || index >= decodedShapes.length) return;
+
+      const pointsArray = decodedShapes[index];
+      // faces is shared across shapes
+
+      // 1) Convert pointsArray to a vtkPoints object
+      const vtkPoints = vtk.Common.Core.vtkPoints.newInstance();
+      vtkPoints.setNumberOfPoints(pointsArray.length);
+      for (let i=0; i < pointsArray.length; i++) {
+        vtkPoints.setPoint(i, pointsArray[i][0], pointsArray[i][1], pointsArray[i][2]);
+      }
+
+      // 2) Convert faces to a vtkCellArray
+      const polys = new Uint32Array(faces.length * 4); // each face = 1 "size + id0 + id1 + id2"
+      for (let i = 0; i < faces.length; i++) {
+        polys[i * 4 + 0] = 3;             // number of points in this cell
+        polys[i * 4 + 1] = faces[i][0];
+        polys[i * 4 + 2] = faces[i][1];
+        polys[i * 4 + 3] = faces[i][2];
+      }
+      const polyData = vtk.Common.DataModel.vtkPolyData.newInstance();
+      polyData.setPoints(vtkPoints);
+      polyData.getPolys().setData(polys);
+
+      // If you have error scalars, you can do:
+      // let scalars = Float32Array.from(errors[index]);
+      // polyData.getPointData().setScalars(vtkDataArray.newInstance({
+      //   name: 'Error',
+      //   values: scalars
+      // }));
+
+      // 3) Update actor
+      vtkActor.getMapper().setInputData(polyData);
+      renderer.resetCamera();
+      renderWindow.render();
+    }
+
+    // Hook up button actions
+    document.getElementById('fetchDataBtn').onclick = fetchPCAData;
+    document.getElementById('sourceBtn').onclick = () => {
+      selectingSource = true;
+      selectingTarget = false;
+    };
+    document.getElementById('targetBtn').onclick = () => {
+      selectingTarget = true;
+      selectingSource = false;
+    };
+    document.getElementById('computeBtn').onclick = computeInterpolation;
+
+    // Slider event
+    document.getElementById('variantSlider').oninput = function(e) {
+      const val = parseInt(e.target.value);
+      updateDisplayedVariant(val);
+    };
   </script>
 </body>
 </html>
