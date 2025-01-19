@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Interactive Morphospace (Zero-Out Other PCs)</title>
+  <title>Interactive Morphospace (Zero-Out Other PCs, Single-Click)</title>
 
   <!-- 1) Plotly for 2D scatter plot -->
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -31,7 +31,6 @@
       border: 1px solid #ccc;
       background: white;
       margin-bottom: 1em;
-      position: relative;
     }
     #variantSlider {
       width: 800px;
@@ -47,23 +46,15 @@
       opacity: 0.4;
       pointer-events: none;
     }
+    #infoBox {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
 
-<h1>Interactive Morphospace Viewer (Zero the Other PCs)</h1>
-<p>
-  This page allows you to:
-</p>
-<ol>
-  <li>Fetch PCA data for 15 PCs.</li>
-  <li>Select which PCs to plot on X/Y axes (only two visible at once).</li>
-  <li>Set a source point (green) and target point (blue) by clicking <em>anywhere</em> in the plot.</li>
-  <li>Those two PC coordinates are placed into their respective PC dimension, while the other 13 PCs are zeroed out.</li>
-  <li>Compute & Interpolate sends <code>[[sourcePC...],[targetPC...]]</code> to the server, receiving aligned shapes.</li>
-  <li>Visualize the shapes with an error colormap vs. shape #0.</li>
-</ol>
-
+<h1>Interactive Morphospace Viewer (Zero Other PCs)</h1>
 <div class="controls">
   <button id="fetchDataBtn">Fetch PCA Data</button>
 
@@ -76,6 +67,12 @@
   <button id="sourceBtn" class="disabled">Set Source Point</button>
   <button id="targetBtn" class="disabled">Set Target Point</button>
   <button id="computeBtn" class="disabled">Compute &amp; Interpolate</button>
+</div>
+
+<!-- Status box for current source & target -->
+<div id="infoBox">
+  Source: ( -- , -- )<br/>
+  Target: ( -- , -- )
 </div>
 
 <div id="plotlyDiv"></div>
@@ -95,8 +92,8 @@ let yPCIndex = 1;          // dimension used for Y
 let selectingSource = false;
 let selectingTarget = false;
 let sourceCoord = null;    // [xVal, yVal] in the current PC plane
-let targetCoord = null;    // same
-let sourcePC = null;       // [15] (xPCIndex = xVal, yPCIndex = yVal, rest=0)
+let targetCoord = null;    // [xVal, yVal]
+let sourcePC = null;       // [15]
 let targetPC = null;       // [15]
 
 // The shapes returned by the server
@@ -113,9 +110,19 @@ let vtkActor = null;
 let lookupTable = null;
 let slider = null;
 
-// We'll keep track of the original red scatter for reference
-let originalTrace = null;
 let plotDiv = null;
+let originalTrace = null; // the main red scatter
+
+// A small helper for the infoBox
+function updateInfoBox() {
+  const box = document.getElementById('infoBox');
+  const sx = sourceCoord ? sourceCoord[0].toFixed(3) : '--';
+  const sy = sourceCoord ? sourceCoord[1].toFixed(3) : '--';
+  const tx = targetCoord ? targetCoord[0].toFixed(3) : '--';
+  const ty = targetCoord ? targetCoord[1].toFixed(3) : '--';
+
+  box.innerHTML = `Source: (${sx}, ${sy})<br/>Target: (${tx}, ${ty})`;
+}
 
 // ------------------------------------------------------
 // UTILS
@@ -129,14 +136,14 @@ function enableButton(id, enable) {
   }
 }
 
+// We'll zero out all 15 PCs except the 2 chosen
 function zeroedPCArray() {
   return new Array(15).fill(0);
 }
 
-// For showing/hiding the compute button
 function updateComputeBtnState() {
-  // only enabled if sourcePC + targetPC are set
-  const canCompute = (sourcePC!==null && targetPC!==null);
+  // only enable if both sourcePC + targetPC are set
+  const canCompute = (sourcePC != null && targetPC != null);
   enableButton("computeBtn", canCompute);
 }
 
@@ -169,8 +176,8 @@ function clearSourceTarget() {
   targetPC = null;
   // remove the line or special markers
   redrawPlot();
-  // disable compute button
   updateComputeBtnState();
+  updateInfoBox();
 }
 
 // ------------------------------------------------------
@@ -246,6 +253,7 @@ function handlePCChange() {
   plotPCAScatter();
 }
 
+
 // ------------------------------------------------------
 // 3) PLOT THE PCA SCATTER
 // ------------------------------------------------------
@@ -270,74 +278,27 @@ function plotPCAScatter() {
     title: `PCA Morphospace (PC${xPCIndex+1} vs PC${yPCIndex+1})`,
     xaxis: { title: `PC${xPCIndex+1}` },
     yaxis: { title: `PC${yPCIndex+1}` },
-    dragmode: 'pan',    // so user can pan
-    clickmode: 'event', // so we get all click events
+    // We'll set dragmode to 'select' so a single click can set a point
+    dragmode: 'select',
+    clickmode: 'event',
   };
 
   plotDiv = document.getElementById('plotlyDiv');
   Plotly.newPlot(plotDiv, [originalTrace], layout);
 
-  // We'll attach a "plotly_click" event for data points, but also attach a generic
-  // click listener for the entire div so we can get x/y anywhere in the plane.
-  //
-  // Method: We'll do 'plotly_relayout' hack to get x/y from the mouse event
-  // whenever user clicks in the main plot area.
-  // This is a known workaround since Plotly doesn't provide a direct "click anywhere" by default.
-
-  plotDiv.on('mousedown', onPlotlyDivMouseDown);
+  // We'll attach 'plotly_click' for single-click in the plot area
+  plotDiv.on('plotly_click', onPlotlyClick);
 
   console.log("-> plotPCAScatter done.");
 }
 
-function onPlotlyDivMouseDown(ev) {
-  // We only care if we are picking source or target
-  if(!selectingSource && !selectingTarget) return;
+function onPlotlyClick(data) {
+  // data.points[0].x, data.points[0].y => the clicked location in data coordinates
+  if(!data || !data.points || !data.points[0]) return;
+  const xVal = data.points[0].x;
+  const yVal = data.points[0].y;
 
-  // The event's x,y are in pixel coords. We have to invert them to data coords.
-  // We can use Plotly.d3's built-in methods or do a direct approach:
-  const rect = ev.target.getBoundingClientRect();
-  const offsetX = ev.clientX - rect.left;
-  const offsetY = ev.clientY - rect.top;
-
-  // We'll get the plot's current axis ranges
-  const gd = plotDiv; // 'gd' for graph div
-  const bb = gd._fullLayout._size; // bounding box of the plotting area in px
-  const xRange = gd._fullLayout.xaxis.range;
-  const yRange = gd._fullLayout.yaxis.range;
-
-  // figure out how offsetX,offsetY map onto xRange,yRange
-  // xRange is [xMin, xMax], yRange is [yMin, yMax] if not reversed
-  // but if the y-axis is top->bottom, we invert.
-
-  const plotWidthPx  = bb.w;
-  const plotHeightPx = bb.h;
-  const plotLeftPx   = bb.l;
-  const plotTopPx    = bb.t;  // distance from top
-  // The main "plotting area" is from (bb.l, bb.t) to (bb.l+bb.w, bb.t+bb.h)
-  // We'll see if the click is inside that region:
-  const pxInsideX = offsetX - plotLeftPx; // in [0..plotWidthPx] if inside
-  const pxInsideY = offsetY - plotTopPx;  // in [0..plotHeightPx] if inside
-
-  if(pxInsideX<0 || pxInsideX>plotWidthPx || pxInsideY<0 || pxInsideY>plotHeightPx) {
-    // user clicked outside the actual plot area
-    return;
-  }
-
-  const xMin = xRange[0], xMax = xRange[1];
-  const yMin = yRange[0], yMax = yRange[1];
-
-  // convert px to data
-  // xData = xMin + fraction*(xMax - xMin)
-  const fracX = pxInsideX/plotWidthPx;
-  let xVal = xMin + fracX*(xMax - xMin);
-
-  // For y, note that by default plotly's y is bottom->top.
-  // So we do 1 - pxInsideY/plotHeight for fraction
-  const fracY = 1 - (pxInsideY/plotHeightPx);
-  let yVal = yMin + fracY*(yMax - yMin);
-
-  console.log("User clicked pxInsideX=", pxInsideX, "pxInsideY=", pxInsideY,
-              " => (xVal,yVal)=(",xVal,",",yVal,")" );
+  console.log(`onPlotlyClick => x=${xVal}, y=${yVal}`);
 
   if(selectingSource) {
     selectingSource = false;
@@ -358,10 +319,10 @@ function onPlotlyDivMouseDown(ev) {
 
   redrawPlot();
   updateComputeBtnState();
+  updateInfoBox();
 }
 
 function redrawPlot() {
-  // We'll build an array of traces: the original red scatter + optional source + optional target + optional line
   if(!plotDiv || !originalTrace) return;
 
   let data = [ originalTrace ];
@@ -408,8 +369,8 @@ function redrawPlot() {
     title: `PCA Morphospace (PC${xPCIndex+1} vs PC${yPCIndex+1})`,
     xaxis: { title:`PC${xPCIndex+1}` },
     yaxis: { title:`PC${yPCIndex+1}` },
-    dragmode:'pan',
-    clickmode:'event',
+    dragmode:'select',
+    clickmode:'event'
   };
 
   Plotly.react(plotDiv, data, layout);
@@ -423,14 +384,14 @@ document.getElementById('sourceBtn').onclick = ()=>{
   if(!pcaData) return;
   selectingSource = true;
   selectingTarget = false;
-  alert("Click anywhere in the plot to set SOURCE");
+  alert("Click in the plot to set SOURCE");
 };
 
 document.getElementById('targetBtn').onclick = ()=>{
   if(!pcaData) return;
   selectingTarget = true;
   selectingSource = false;
-  alert("Click anywhere in the plot to set TARGET");
+  alert("Click in the plot to set TARGET");
 };
 
 
