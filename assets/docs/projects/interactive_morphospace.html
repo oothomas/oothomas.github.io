@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Plot By Group + Click Anywhere Demo</title>
+  <title>VTK Reuse Single Window + Plotly Click Anywhere + Groups</title>
 
   <!-- 1) Plotly -->
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -20,8 +20,7 @@
     .controls { margin-bottom: 1em; }
     select, button { margin-right: 10px; }
     #plotlyDiv {
-      width: 600px;
-      height: 480px;
+      width: 600px; height: 480px;
       border: 1px solid #ccc;
       background: white;
       margin-bottom: 1em;
@@ -32,24 +31,23 @@
       margin: 10px 0 20px 0;
     }
     #vtkContainer {
-      width: 800px;
-      height: 600px;
+      width: 800px; height: 600px;
       border: 1px solid #ccc;
       background-color: #EFEFEF;
+      position: relative;
     }
     .disabled {
-      opacity: 0.4;
-      pointer-events: none;
+      opacity: 0.4; pointer-events: none;
     }
     #infoBox {
-      font-weight: bold;
-      margin-bottom: 10px;
+      font-weight: bold; margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
 
-<h1>Grouped PCA Plot + Anywhere Click</h1>
+<h1>Single VTK Window Reuse + Plotly “Click Anywhere” + Group Legend</h1>
+
 <div class="controls">
   <button id="fetchDataBtn">Fetch PCA Data</button>
 
@@ -74,127 +72,122 @@
 <input type="range" id="variantSlider" min="0" max="0" value="0" step="1" />
 <div id="vtkContainer"></div>
 
+
 <script>
 // ------------------------------------------------------
-// 0) Globals
+// GLOBALS
 // ------------------------------------------------------
-let pcaData = null;            // Nx15
-let specimenIds = null;        // Nx1
-let groups = null;             // Nx1 => "Mouse" / "Peromyscus"
+let pcaData = null;
+let specimenIds = null;
+let groups = null;
 let xPCIndex=0, yPCIndex=1;
 
 let selectingSource=false, selectingTarget=false;
 let sourceCoord=null, targetCoord=null;
 let sourcePC=null, targetPC=null;
 
-// VTK / shape
-let serverAlignedShapes=null, faces=null;
-let errorsArray=null;
-let globalErrorMin=0, globalErrorMax=1;
+// For the single VTK usage
 let renderer=null, renderWindow=null, vtkActor=null, lookupTable=null;
+let serverAlignedShapes=null, faces=null, errorsArray=null;
+let globalErrorMin=0, globalErrorMax=1;
 
-// The Plotly div + data
+// For Plotly
 let plotDiv=null;
-let groupTraces=null; // array of traces
-let layout=null;       // store layout for reference
+let groupTraces=null;
+let layout=null;
+
 
 // ------------------------------------------------------
 // UTILS
 // ------------------------------------------------------
 function enableButton(id, enable) {
   const btn = document.getElementById(id);
-  if (enable) btn.classList.remove("disabled");
-  else        btn.classList.add("disabled");
+  if(enable) btn.classList.remove("disabled");
+  else       btn.classList.add("disabled");
 }
 
 function zeroedPCArray() {
   return new Array(15).fill(0);
 }
 
-function updateComputeBtnState() {
-  const canCompute = (sourcePC!=null && targetPC!=null);
-  enableButton("computeBtn", canCompute);
-}
-
-function updateInfoBox() {
-  const box = document.getElementById('infoBox');
-  const sx = sourceCoord ? sourceCoord[0].toFixed(3) : '--';
-  const sy = sourceCoord ? sourceCoord[1].toFixed(3) : '--';
-  const tx = targetCoord ? targetCoord[0].toFixed(3) : '--';
-  const ty = targetCoord ? targetCoord[1].toFixed(3) : '--';
-  box.innerHTML = `Source: (${sx}, ${sy})<br/>Target: (${tx}, ${ty})`;
-}
-
-// Clear picks
-function clearSourceTarget() {
-  selectingSource=false;
-  selectingTarget=false;
-  sourceCoord=null; targetCoord=null;
-  sourcePC=null;    targetPC=null;
-  updateComputeBtnState();
-  updateInfoBox();
-  redrawPlot();
-}
-
-// Clear VTK shapes
-function clearVTKScene() {
-  if(renderer) {
-    renderer.delete();
-    renderWindow.delete();
-    renderer=null; renderWindow=null;
-    vtkActor=null; lookupTable=null;
-  }
-  serverAlignedShapes=null; faces=null; errorsArray=null;
-  let slider = document.getElementById("variantSlider");
-  slider.min=0; slider.max=0; slider.value=0;
-}
-
-// Convert from pixel -> data coords by reading the axis ranges
-function pixelToDataCoords(ev) {
-  if(!plotDiv._fullLayout) return null;
-
-  const fullLayout = plotDiv._fullLayout;
-  if(!fullLayout.xaxis || !fullLayout.yaxis) return null;
-
-  // bounding box of the plot area in px
-  const size = fullLayout._size;
-  const plotLeftPx = size.l, plotRightPx = size.l + size.w;
-  const plotTopPx  = size.t, plotBottomPx= size.t + size.h;
-
-  // offset in the entire div
-  const rect= plotDiv.getBoundingClientRect();
-  const offsetX= ev.clientX - rect.left;
-  const offsetY= ev.clientY - rect.top;
-
-  // local coords in the data region
-  const pxInsideX = offsetX - plotLeftPx;
-  const pxInsideY = offsetY - plotTopPx;
-  if(pxInsideX<0 || pxInsideX>size.w || pxInsideY<0 || pxInsideY>size.h){
-    return null; // outside the data region
-  }
-
-  const rangeX= fullLayout.xaxis.range; // [minX, maxX]
-  const rangeY= fullLayout.yaxis.range; // [minY, maxY]
-  const fracX= pxInsideX / size.w;
-  // invert Y because Plotly's default y= bottom->top
-  const fracY= 1 - (pxInsideY / size.h);
-
-  const [minX, maxX] = rangeX;
-  const [minY, maxY] = rangeY;
-
-  const xVal= minX + fracX*(maxX-minX);
-  const yVal= minY + fracY*(maxY-minY);
-  return [xVal, yVal];
-}
-
-// Euclidean distance
 function eucDist(a,b){
   const dx=a[0]-b[0], dy=a[1]-b[1], dz=a[2]-b[2];
   return Math.sqrt(dx*dx + dy*dy + dz*dz);
 }
 
+function updateInfoBox() {
+  const box= document.getElementById('infoBox');
+  const sx= sourceCoord? sourceCoord[0].toFixed(3):'--';
+  const sy= sourceCoord? sourceCoord[1].toFixed(3):'--';
+  const tx= targetCoord? targetCoord[0].toFixed(3):'--';
+  const ty= targetCoord? targetCoord[1].toFixed(3):'--';
+  box.innerHTML=`Source: (${sx}, ${sy})<br/>Target: (${tx}, ${ty})`;
+}
+
+function updateComputeBtnState() {
+  const canCompute= (sourcePC!=null && targetPC!=null);
+  enableButton("computeBtn", canCompute);
+}
+
+
 // ------------------------------------------------------
-// 1) FETCH PCA DATA
+// CLEARING
+// ------------------------------------------------------
+
+// Remove the user’s picks
+function clearSourceTarget() {
+  selectingSource=false;
+  selectingTarget=false;
+  sourceCoord=null; targetCoord=null;
+  sourcePC=null;    targetPC=null;
+  updateInfoBox();
+  updateComputeBtnState();
+  redrawPlot();
+}
+
+// Reuse one VTK scene. If we want to completely remove it (like switching PC dims), do so.
+function destroyVTKScene() {
+  // Only call if you want to truly discard the old window
+  if(renderer) {
+    renderer.delete();
+    renderWindow.delete();
+    renderer=null;
+    renderWindow=null;
+    vtkActor=null;
+    lookupTable=null;
+  }
+}
+
+// Instead of destroying the scene, we can just remove old shapes if needed:
+function clearVTKShapes() {
+  // remove old actor if any
+  if(renderer && vtkActor) {
+    renderer.removeActor(vtkActor);
+    vtkActor.delete();
+    vtkActor=null;
+  }
+  if(lookupTable) {
+    lookupTable.delete();
+    lookupTable=null;
+  }
+  // now we can add a new actor next time
+  // we do NOT call delete on renderer, so we keep the same window
+}
+
+// Also reset the data arrays
+function resetInterpolationData() {
+  serverAlignedShapes=null;
+  faces=null;
+  errorsArray=null;
+  globalErrorMin=0;
+  globalErrorMax=1;
+  const slider= document.getElementById('variantSlider');
+  slider.min=0; slider.max=0; slider.value=0;
+}
+
+
+// ------------------------------------------------------
+// 1) FETCH PCA
 // ------------------------------------------------------
 document.getElementById('fetchDataBtn').onclick= async()=>{
   try {
@@ -202,24 +195,22 @@ document.getElementById('fetchDataBtn').onclick= async()=>{
     if(!resp.ok) throw new Error(`Fetch error: ${resp.status}`);
     const data= await resp.json();
 
-    pcaData= data.components; // Nx15
+    pcaData= data.components;       // Nx15
     specimenIds= data.specimen_ids; // Nx1
-    console.log("pcaData shape=", pcaData.length,"x", pcaData[0].length);
-    console.log("specimenIds length=", specimenIds.length);
 
-    // Build group array
-    // groups = [x.split("_")[0] for x in specimen_ids]
-    // groups = ["Mouse" if len(item)==3 else "Peromyscus" for item in groups]
-    groups= specimenIds.map(id=>{
+    // Build group array, "Mouse" if prefix len=3, else "Peromyscus"
+    groups= specimenIds.map( id=>{
       const prefix= id.split("_")[0];
-      if(prefix.length===3) return "Mouse";
-      else return "Peromyscus";
+      return (prefix.length===3) ? "Mouse":"Peromyscus";
     });
 
     fillPCSelects();
     plotDataByGroup();
     enableButton("sourceBtn", true);
     enableButton("targetBtn", true);
+
+    console.log("pcaData shape=",pcaData.length,"x",pcaData[0].length);
+    console.log("specimenIds length=", specimenIds.length);
   }
   catch(err){
     alert("Error fetching PCA: "+err.message);
@@ -227,24 +218,21 @@ document.getElementById('fetchDataBtn').onclick= async()=>{
   }
 };
 
-// 2) Build group traces => newPlot
+// 2) Building group traces => newPlot
 function plotDataByGroup() {
-  if(!pcaData || !groups) return;
+  if(!pcaData||!groups) return;
 
-  // We'll gather each group => separate arrays of (x,y)
-  // Then create a separate Plotly trace for each distinct group
-  let groupMap= {}; // e.g. { "Mouse": {x:[], y:[]}, "Peromyscus":{x:[], y:[]} }
-
-  for(let i=0; i< pcaData.length; i++){
+  // Partition points by group
+  let groupMap= {};
+  for(let i=0;i<pcaData.length;i++){
     let g= groups[i];
-    if(!groupMap[g]) groupMap[g]= { x:[], y:[] };
-    groupMap[g].x.push( pcaData[i][xPCIndex] );
-    groupMap[g].y.push( pcaData[i][yPCIndex] );
+    if(!groupMap[g]) groupMap[g]= {x:[], y:[]};
+    groupMap[g].x.push(pcaData[i][xPCIndex]);
+    groupMap[g].y.push(pcaData[i][yPCIndex]);
   }
-
-  // build an array of traces
-  let colorMap= {"Mouse":"blue","Peromyscus":"orange"}; // or pick any
-  groupTraces= [];
+  // build traces
+  let colorMap= {"Mouse":"blue","Peromyscus":"orange"};
+  groupTraces=[];
   for(let gName in groupMap){
     groupTraces.push({
       x: groupMap[gName].x,
@@ -252,34 +240,29 @@ function plotDataByGroup() {
       mode:'markers',
       type:'scatter',
       name: gName,
-      marker:{ size:6, color: colorMap[gName] || 'gray' }
+      marker:{size:6, color: colorMap[gName]||'gray'}
     });
   }
 
-  layout= {
+  layout={
     title:`PCA Morphospace (PC${xPCIndex+1} vs PC${yPCIndex+1})`,
     showlegend:true,
-    dragmode:'none',           // no pan/zoom
-    xaxis:{ title:`PC${xPCIndex+1}` },
-    yaxis:{ title:`PC${yPCIndex+1}` }
+    // No built-in pan/zoom => staticPlot
+    // Or we can do dragmode:'none'
   };
-
   plotDiv= document.getElementById('plotlyDiv');
-
-  // We'll pass a config with staticPlot:true => no built-in interaction
   Plotly.newPlot(plotDiv, groupTraces, layout, {staticPlot:true});
 
-  // Then we handle "mousedown" ourselves to pick x,y anywhere
+  // We'll add "mousedown" to capture clicks anywhere
   plotDiv.addEventListener('mousedown', onMouseDownPlot);
 }
 
-// If user changes PC selection
 function fillPCSelects(){
   const xSel= document.getElementById('xPCSelect');
   const ySel= document.getElementById('yPCSelect');
-  xSel.innerHTML="";
-  ySel.innerHTML="";
-  for(let i=1; i<=15; i++){
+  xSel.innerHTML=""; ySel.innerHTML="";
+
+  for(let i=1;i<=15;i++){
     let oX= document.createElement('option');
     oX.value=i; oX.textContent="PC"+i;
     xSel.appendChild(oX);
@@ -290,7 +273,8 @@ function fillPCSelects(){
   }
   xSel.value="1";
   ySel.value="2";
-  xPCIndex=0; yPCIndex=1;
+  xPCIndex=0;
+  yPCIndex=1;
 
   xSel.onchange=(e)=>{
     xPCIndex= parseInt(e.target.value)-1;
@@ -305,34 +289,24 @@ function fillPCSelects(){
 function handlePCChange() {
   console.log("PC changed => clearing picks + clearing VTK + rePlot by group");
   clearSourceTarget();
-  clearVTKScene();
+  destroyVTKScene();  // if you want to fully discard the old window
+  resetInterpolationData();
   plotDataByGroup();
 }
 
-// user sets source/target
-document.getElementById('sourceBtn').onclick=()=>{
-  selectingSource=true;
-  selectingTarget=false;
-  alert("Click anywhere in the chart to set SOURCE");
-};
-document.getElementById('targetBtn').onclick=()=>{
-  selectingTarget=true;
-  selectingSource=false;
-  alert("Click anywhere in the chart to set TARGET");
-};
 
 // The raw "mousedown" => pixel->data => set source/target
 function onMouseDownPlot(ev){
   if(!selectingSource && !selectingTarget) return;
+  ev.preventDefault();
 
-  ev.preventDefault(); // disable any default
   const coords= pixelToDataCoords(ev);
-  if(!coords) {
+  if(!coords){
     console.log("Clicked outside data area");
     return;
   }
   const [xVal,yVal]= coords;
-  if(selectingSource) {
+  if(selectingSource){
     selectingSource=false;
     sourceCoord=[xVal,yVal];
     sourcePC= zeroedPCArray();
@@ -340,7 +314,7 @@ function onMouseDownPlot(ev){
     sourcePC[yPCIndex]= yVal;
     alert(`Source => (${xVal.toFixed(3)}, ${yVal.toFixed(3)})`);
   }
-  else if(selectingTarget) {
+  else if(selectingTarget){
     selectingTarget=false;
     targetCoord=[xVal,yVal];
     targetPC= zeroedPCArray();
@@ -353,13 +327,38 @@ function onMouseDownPlot(ev){
   updateInfoBox();
 }
 
-// Re-draw with groupTraces + optional markers for source/target + line
+// Pixel->data conversion
+function pixelToDataCoords(ev){
+  // We'll read plotDiv._fullLayout, as with the earlier approach
+  if(!plotDiv._fullLayout) return null;
+  const fl= plotDiv._fullLayout;
+  if(!fl.xaxis||!fl.yaxis||!fl._size) return null;
+
+  const s= fl._size;
+  const rect= plotDiv.getBoundingClientRect();
+  const offsetX= ev.clientX - rect.left;
+  const offsetY= ev.clientY - rect.top;
+
+  const pxInsideX= offsetX - s.l;
+  const pxInsideY= offsetY - s.t;
+  if(pxInsideX<0||pxInsideX> s.w || pxInsideY<0||pxInsideY> s.h) return null;
+
+  const [minX,maxX]= fl.xaxis.range;
+  const [minY,maxY]= fl.yaxis.range;
+  const fracX= pxInsideX/s.w;
+  const fracY= 1-(pxInsideY/s.h);
+
+  const xVal= minX+ fracX*(maxX-minX);
+  const yVal= minY+ fracY*(maxY-minY);
+  return [xVal,yVal];
+}
+
 function redrawPlot() {
   if(!groupTraces) return;
+  // clone them
+  const data= JSON.parse(JSON.stringify(groupTraces));
 
-  // Start with original groupTraces
-  let data= JSON.parse(JSON.stringify(groupTraces));
-  // We'll push a separate short trace for source, target, line
+  // add source/target if exist
   if(sourceCoord){
     data.push({
       x:[sourceCoord[0]],
@@ -382,7 +381,7 @@ function redrawPlot() {
       showlegend:false
     });
   }
-  if(sourceCoord && targetCoord) {
+  if(sourceCoord && targetCoord){
     data.push({
       x:[sourceCoord[0], targetCoord[0]],
       y:[sourceCoord[1], targetCoord[1]],
@@ -393,21 +392,33 @@ function redrawPlot() {
       showlegend:false
     });
   }
-
-  // same layout, no pan
   Plotly.react(plotDiv, data, layout, {staticPlot:true});
 }
 
+// user sets source/target
+document.getElementById('sourceBtn').onclick=()=>{
+  if(!pcaData) return;
+  selectingSource=true; selectingTarget=false;
+  alert("Click anywhere in the chart to set SOURCE");
+};
+document.getElementById('targetBtn').onclick=()=>{
+  if(!pcaData) return;
+  selectingTarget=true; selectingSource=false;
+  alert("Click anywhere in the chart to set TARGET");
+};
+
 
 // ------------------------------------------------------
-// 3) Compute & Interpolate
+// 3) COMPUTE & INTERPOLATE
 // ------------------------------------------------------
 document.getElementById('computeBtn').onclick= async()=>{
-  if(!sourcePC || !targetPC){
+  if(!sourcePC||!targetPC){
     alert("Need both source & target!");
     return;
   }
-  clearVTKScene();
+  // Instead of destroying the entire scene, we just remove old shapes
+  clearVTKShapes();
+  resetInterpolationData();
 
   const payload= { pc_scores:[ sourcePC, targetPC ] };
   console.log("-> /interpolate =>", payload);
@@ -452,33 +463,42 @@ function computeErrorsAndSetupScene(){
   globalErrorMax=maxVal;
   console.log("Error range:", minVal,"..",maxVal);
 
-  setupVTKScene();
+  // Create or reuse the VTK scene
+  setupVTKSceneIfNeeded();
+  // create LUT
   lookupTable= createLookupTable(minVal, maxVal);
 
+  // show shape #0
   let slider= document.getElementById("variantSlider");
   slider.min=0; slider.max=N-1; slider.value=0;
   updateDisplayedVariant(0);
 }
 
-function setupVTKScene(){
-  if(renderer) return;
-  const fullScreenRenderer= vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
-    rootContainer: document.getElementById('vtkContainer'),
-    containerStyle:{ width:'100%', height:'100%', position:'relative', overflow:'hidden' }
-  });
-  renderWindow= fullScreenRenderer.getRenderWindow();
-  renderer= fullScreenRenderer.getRenderer();
+function setupVTKSceneIfNeeded(){
+  // Only do the newInstance() stuff if we haven't already
+  if(!renderer) {
+    console.log("Creating VTK FullScreenRenderWindow once...");
+    const fsr= vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
+      rootContainer: document.getElementById('vtkContainer'),
+      containerStyle:{ width:'100%', height:'100%', position:'relative', overflow:'hidden'}
+    });
+    renderWindow= fsr.getRenderWindow();
+    renderer= fsr.getRenderer();
 
-  const mapper= vtk.Rendering.Core.vtkMapper.newInstance();
-  mapper.setColorModeToMapScalars();
-  mapper.setScalarModeToUsePointData();
-  mapper.setInterpolateScalarsBeforeMapping(true);
+    const mapper= vtk.Rendering.Core.vtkMapper.newInstance();
+    mapper.setColorModeToMapScalars();
+    mapper.setScalarModeToUsePointData();
+    mapper.setInterpolateScalarsBeforeMapping(true);
 
-  vtkActor= vtk.Rendering.Core.vtkActor.newInstance();
-  vtkActor.setMapper(mapper);
-  renderer.addActor(vtkActor);
-  renderer.resetCamera();
-  renderWindow.render();
+    vtkActor= vtk.Rendering.Core.vtkActor.newInstance();
+    vtkActor.setMapper(mapper);
+    renderer.addActor(vtkActor);
+
+    renderer.resetCamera();
+    renderWindow.render();
+  } else {
+    console.log("VTK scene already created => reusing");
+  }
 }
 
 function createLookupTable(minVal,maxVal){
@@ -490,8 +510,7 @@ function createLookupTable(minVal,maxVal){
 }
 
 document.getElementById('variantSlider').oninput= e=>{
-  const idx= parseInt(e.target.value);
-  updateDisplayedVariant(idx);
+  updateDisplayedVariant(parseInt(e.target.value));
 };
 
 function updateDisplayedVariant(index){
@@ -501,12 +520,13 @@ function updateDisplayedVariant(index){
   let errs= errorsArray[index];
   let V= shape.length, F= faces.length;
 
-  let vtkPoints= vtk.Common.Core.vtkPoints.newInstance();
+  // build polydata
+  const vtkPoints= vtk.Common.Core.vtkPoints.newInstance();
   vtkPoints.setNumberOfPoints(V);
   for(let i=0;i<V;i++){
     vtkPoints.setPoint(i, shape[i][0], shape[i][1], shape[i][2]);
   }
-  let polys= new Uint32Array(F*4);
+  const polys= new Uint32Array(F*4);
   for(let f=0; f<F; f++){
     const off=f*4;
     polys[off]=3;
@@ -514,17 +534,18 @@ function updateDisplayedVariant(index){
     polys[off+2]= faces[f][1];
     polys[off+3]= faces[f][2];
   }
-  let polyData= vtk.Common.DataModel.vtkPolyData.newInstance();
+  const polyData= vtk.Common.DataModel.vtkPolyData.newInstance();
   polyData.setPoints(vtkPoints);
   polyData.getPolys().setData(polys);
 
-  let scalarsData= new Float32Array(errs);
-  let scalars= vtk.Common.Core.vtkDataArray.newInstance({
+  const scalarsData= new Float32Array(errs);
+  const scalars= vtk.Common.Core.vtkDataArray.newInstance({
     name:'Error', values: scalarsData
   });
   polyData.getPointData().setScalars(scalars);
 
-  let mapper= vtkActor.getMapper();
+  // feed actor's mapper
+  const mapper= vtkActor.getMapper();
   mapper.setInputData(polyData);
   mapper.setLookupTable(lookupTable);
   mapper.setUseLookupTableScalarRange(true);
@@ -532,23 +553,6 @@ function updateDisplayedVariant(index){
   renderer.resetCamera();
   renderWindow.render();
 }
-
-
-// Source/Target Buttons
-document.getElementById('sourceBtn').onclick=()=>{
-  if(!pcaData) return;
-  selectingSource=true;
-  selectingTarget=false;
-  alert("Click anywhere in the chart to set SOURCE");
-};
-
-document.getElementById('targetBtn').onclick=()=>{
-  if(!pcaData) return;
-  selectingTarget=true;
-  selectingSource=false;
-  alert("Click anywhere in the chart to set TARGET");
-};
-
 </script>
 </body>
 </html>
