@@ -324,7 +324,7 @@ function alignAllMeshes(shapes) {
 
   // 1) Farthest point sample from the first shape
   console.log("   -> farthestPointSample(...) on shape[0]");
-  const sampleIndices = farthestPointSample(out[0], 128);
+  const sampleIndices = farthestPointSample(out[0], 512);
   console.log("   -> sampleIndices length:", sampleIndices.length);
 
   const basePoints = sampleIndices.map(idx => out[0][idx]);
@@ -348,7 +348,7 @@ function alignAllMeshes(shapes) {
   return out;
 }
 
-function farthestPointSample(points, k=128) {
+function farthestPointSample(points, k=512) {
   // Just for debugging, check if any point is NaN
   for (let i=0; i<points.length; i++) {
     const [x,y,z] = points[i];
