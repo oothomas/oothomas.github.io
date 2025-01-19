@@ -53,8 +53,7 @@
 <ol>
   <li>Select which PCs to plot on X/Y axes.</li>
   <li>Choose a source and target point from the scatter plot.</li>
-  <li>Fetch and interpolate shapes from the server.</li>
-  <li>Perform client-side <b>farthest-point sampling</b> + <b>SVD</b> alignment on all returned meshes.</li>
+  <li>Fetch and interpolate shapes from the server <b>(aligned on the server)</b>.</li>
   <li>Color the meshes by per-vertex <b>error</b> (distance from reference shape #0).</li>
   <li>Use the slider to step through the interpolated series.</li>
 </ol>
@@ -73,8 +72,13 @@
   <button id="computeBtn">Compute &amp; Interpolate</button>
 </div>
 
+<!-- The Plotly scatter plot -->
 <div id="plotlyDiv"></div>
+
+<!-- Slider to pick which shape variant to display -->
 <input type="range" id="variantSlider" min="0" max="0" value="0" step="1" />
+
+<!-- VTK Container -->
 <div id="vtkContainer"></div>
 
 <script>
@@ -92,10 +96,9 @@ let sourcePoint = null;
 let targetPoint = null;
 
 // After interpolation
-let originalShapes = null;
-let faces = null;
-let alignedShapes = null;
-let errorsArray = null;
+let serverAlignedShapes = null;  // NxVx3 (ALREADY aligned by the server)
+let faces = null;                // Fx3
+let errorsArray = null;          // NxV (distances from shape[0])
 let globalErrorMin = 0;
 let globalErrorMax = 1;
 
@@ -118,16 +121,16 @@ async function fetchPCAData() {
       throw new Error(`Fetch error: ${resp.status} - ${resp.statusText}`);
     }
     const data = await resp.json();
-    pcaData = data.components;   // Nx15
-    specimenIds = data.specimen_ids; // optional
-    console.log("-> Fetched PCA data OK. pcaData size:", pcaData.length, " x ", pcaData[0].length);
+    pcaData = data.components;
+    specimenIds = data.specimen_ids;
+    console.log("-> Fetched PCA data. shape:", pcaData.length, "x", pcaData[0].length);
 
     fillPCSelects();
     plotPCAScatter();
     console.log("-> End fetchPCAData() with success.");
   } catch (err) {
     alert("Error fetching PCA data: " + err);
-    console.error("fetchPCAData() error:", err);
+    console.error(err);
   }
 }
 
@@ -174,15 +177,16 @@ function fillPCSelects() {
 
 
 // ------------------------------------------------------
-// 3) PLOT THE PCA SCATTER (Plotly) using xPCIndex, yPCIndex
+// 3) PLOT THE PCA SCATTER (Plotly)
 // ------------------------------------------------------
 function plotPCAScatter() {
   console.log("plotPCAScatter() start...");
   if (!pcaData || pcaData.length === 0) {
-    console.warn("No PCA data or not fetched yet. Exiting plotPCAScatter.");
+    console.warn("No PCA data to plot or not fetched yet.");
     return;
   }
-  // Reset source/target
+
+  // Reset selection
   sourcePoint = null;
   targetPoint = null;
 
@@ -205,22 +209,22 @@ function plotPCAScatter() {
 
   Plotly.newPlot('plotlyDiv', [trace], layout);
 
-  // Attach click event
+  // Attach click
   const plotDiv = document.getElementById('plotlyDiv');
-  plotDiv.on('plotly_click', function(clickData){
+  plotDiv.on('plotly_click', (clickData) => {
     if (clickData.points && clickData.points.length > 0) {
       const pt = clickData.points[0];
       const xVal = pt.x;
       const yVal = pt.y;
       if (selectingSource) {
         sourcePoint = [xVal, yVal];
-        console.log(`Source set to: ${sourcePoint}`);
         alert(`Source set: (${xVal.toFixed(3)}, ${yVal.toFixed(3)})`);
+        console.log("Source set =>", sourcePoint);
         selectingSource = false;
       } else if (selectingTarget) {
         targetPoint = [xVal, yVal];
-        console.log(`Target set to: ${targetPoint}`);
         alert(`Target set: (${xVal.toFixed(3)}, ${yVal.toFixed(3)})`);
+        console.log("Target set =>", targetPoint);
         selectingTarget = false;
       }
     }
@@ -231,18 +235,16 @@ function plotPCAScatter() {
 
 
 // ------------------------------------------------------
-// 4) POST SOURCE/TARGET => GET INTERPOLATED SHAPES
-//    Then do client-side alignment + error coloring
+// 4) POST SOURCE/TARGET => GET ALIGNED SHAPES (FROM SERVER)
 // ------------------------------------------------------
 async function computeInterpolation() {
   console.log("computeInterpolation() called...");
   if (!sourcePoint || !targetPoint) {
     alert("Please pick both source and target points from the scatter plot!");
-    console.error("-> computeInterpolation aborted: no source or target set.");
     return;
   }
 
-  // We'll only set the selected PC coords for those indices; rest = 0
+  // only set these PC coords
   const pcScores = [
     new Array(15).fill(0),
     new Array(15).fill(0)
@@ -265,220 +267,75 @@ async function computeInterpolation() {
       throw new Error(`Interpolation error: ${resp.status} - ${resp.statusText}`);
     }
     const result = await resp.json();
-    originalShapes = result.shapes; // NxVx3
-    faces = result.faces;           // Fx3
-    console.log("-> Interpolation fetch complete. Received shapes and faces.");
-    console.log("   shapes length:", originalShapes.length,
-                "   each shape length (V):", originalShapes[0].length);
-    console.log("   faces length (F):", faces.length);
+    serverAlignedShapes = result.shapes; // NxVx3, aligned on server
+    faces = result.faces;                // Fx3
 
-    // 1) Align all shapes (client-side) to shape[0]
-    console.log("-> about to alignAllMeshes(...)");
-    alignedShapes = alignAllMeshes(originalShapes);
-    console.log("-> alignment done. alignedShapes length:", alignedShapes.length);
+    console.log("-> fetch success. Received shapes (already aligned) and faces.");
+    console.log("   shapes length:", serverAlignedShapes.length,
+                "   each shape has V=", serverAlignedShapes[0].length, "vertices");
+    console.log("   faces length:", faces.length);
 
-    // 2) Compute errors relative to shape[0]
-    console.log("-> computeErrors(...)...");
-    errorsArray = computeErrors(alignedShapes[0], alignedShapes);
-    let { minVal, maxVal } = findGlobalRange(errorsArray);
-    globalErrorMin = minVal;
-    globalErrorMax = maxVal;
-    console.log("-> error range:", globalErrorMin, "to", globalErrorMax);
+    // Compute error relative to shape #0
+    computeErrorsAndSetupScene();
 
-    // 3) Setup VTK scene if not done
-    console.log("-> calling setupVTKScene()...");
-    setupVTKScene();
-
-    // 4) Create color LUT
-    console.log("-> creating LUT from", globalErrorMin, "to", globalErrorMax);
-    lookupTable = createLookupTable(globalErrorMin, globalErrorMax);
-
-    // 5) Show shape #0 and update slider
-    slider = document.getElementById('variantSlider');
-    slider.min = 0;
-    slider.max = alignedShapes.length - 1;
-    slider.value = 0;
-    console.log(`-> slider range set: [0..${alignedShapes.length - 1}]`);
-    updateDisplayedVariant(0);
-
-    console.log("-> computeInterpolation() success complete.");
   } catch (err) {
     alert("Error computing interpolation: " + err.message);
-    console.error("computeInterpolation() error:", err);
+    console.error(err);
   }
 }
 
+// No more alignment in the client. We'll just do error + display
 
-// ------------------------------------------------------
-// (A) FARTHEST POINT SAMPLING + (B) SVD REGISTRATION
-// ------------------------------------------------------
-function alignAllMeshes(shapes) {
-  console.log("alignAllMeshes() start...  shapes.length=", shapes.length);
-  if (shapes.length === 0) {
-    console.warn("No shapes at all. Exiting alignAllMeshes early.");
-    return [];
-  }
-  const N = shapes.length;
-  // Deep copy
-  const out = shapes.map(shape => shape.map(pt => [...pt]));
+function computeErrorsAndSetupScene() {
+  console.log("computeErrorsAndSetupScene()");
+  // 1) compute errors
+  const refShape = serverAlignedShapes[0];
+  const nVerts = refShape.length;
+  const N = serverAlignedShapes.length;
 
-  // 1) Farthest point sample from the first shape
-  console.log("   -> farthestPointSample(...) on shape[0]");
-  const sampleIndices = farthestPointSample(out[0], 512);
-  console.log("   -> sampleIndices length:", sampleIndices.length);
-
-  const basePoints = sampleIndices.map(idx => out[0][idx]);
-  // 2) For each shape, do registration
-  for (let i = 1; i < N; i++) {
-    const currentPoints = sampleIndices.map(idx => out[i][idx]);
-    const { R, t } = computeNPointRegistration(currentPoints, basePoints);
-    // transform entire shape
-    for (let v = 0; v < out[i].length; v++) {
-      const p = out[i][v];
-      const x = p[0], y = p[1], z = p[2];
-      const px = R[0][0]*x + R[0][1]*y + R[0][2]*z;
-      const py = R[1][0]*x + R[1][1]*y + R[1][2]*z;
-      const pz = R[2][0]*x + R[2][1]*y + R[2][2]*z;
-      out[i][v][0] = px + t[0];
-      out[i][v][1] = py + t[1];
-      out[i][v][2] = pz + t[2];
-    }
-  }
-  console.log("-> alignAllMeshes() done. returning array of length:", out.length);
-  return out;
-}
-
-function farthestPointSample(points, k=512) {
-  // Just for debugging, check if any point is NaN
-  for (let i=0; i<points.length; i++) {
-    const [x,y,z] = points[i];
-    if (Number.isNaN(x) || Number.isNaN(y) || Number.isNaN(z)) {
-      console.warn(`   -> Found NaN in shape[0] at vertex index ${i}`);
+  errorsArray = new Array(N);
+  for (let i=0; i<N; i++) {
+    errorsArray[i] = new Array(nVerts);
+    for (let v=0; v<nVerts; v++){
+      errorsArray[i][v] = euclideanDist(serverAlignedShapes[i][v], refShape[v]);
     }
   }
 
-  if (points.length <= k) {
-    console.log("   -> farthestPointSample: shape smaller than k => returning all indices");
-    return [...points.keys()];
-  }
-  const selected = [0];
-  const dist = new Array(points.length).fill(Infinity);
-
-  let lastSelected = points[0];
-  for (let count = 1; count < k; count++) {
-    for (let i = 0; i < points.length; i++) {
-      const d = euclideanDist(points[i], lastSelected);
-      if (d < dist[i]) dist[i] = d;
-    }
-    let maxDist = -1, maxIdx = -1;
-    for (let i = 0; i < dist.length; i++) {
-      if (dist[i] > maxDist) {
-        maxDist = dist[i];
-        maxIdx = i;
-      }
-    }
-    selected.push(maxIdx);
-    lastSelected = points[maxIdx];
-  }
-  return selected;
-}
-
-function computeNPointRegistration(srcPoints, tgtPoints) {
-  // debug logs
-  // We'll quickly check if any are NaN:
-  for (let i=0; i<srcPoints.length; i++){
-    const [sx,sy,sz] = srcPoints[i];
-    if (Number.isNaN(sx) || Number.isNaN(sy) || Number.isNaN(sz)) {
-      console.warn("   -> computeNPointRegistration: found NaN in srcPoints at i=", i, srcPoints[i]);
-    }
-  }
-  for (let i=0; i<tgtPoints.length; i++){
-    const [tx,ty,tz] = tgtPoints[i];
-    if (Number.isNaN(tx) || Number.isNaN(ty) || Number.isNaN(tz)) {
-      console.warn("   -> computeNPointRegistration: found NaN in tgtPoints at i=", i, tgtPoints[i]);
-    }
-  }
-
-  const n = srcPoints.length;
-  let srcC = [0,0,0], tgtC = [0,0,0];
-  for (let i = 0; i < n; i++) {
-    srcC[0] += srcPoints[i][0];
-    srcC[1] += srcPoints[i][1];
-    srcC[2] += srcPoints[i][2];
-    tgtC[0] += tgtPoints[i][0];
-    tgtC[1] += tgtPoints[i][1];
-    tgtC[2] += tgtPoints[i][2];
-  }
-  srcC = srcC.map(v => v/n);
-  tgtC = tgtC.map(v => v/n);
-
-  let H = [[0,0,0],[0,0,0],[0,0,0]];
-  for (let i = 0; i < n; i++) {
-    const sx = srcPoints[i][0] - srcC[0];
-    const sy = srcPoints[i][1] - srcC[1];
-    const sz = srcPoints[i][2] - srcC[2];
-    const tx = tgtPoints[i][0] - tgtC[0];
-    const ty = tgtPoints[i][1] - tgtC[1];
-    const tz = tgtPoints[i][2] - tgtC[2];
-    H[0][0] += sx*tx; H[0][1] += sx*ty; H[0][2] += sx*tz;
-    H[1][0] += sy*tx; H[1][1] += sy*ty; H[1][2] += sy*tz;
-    H[2][0] += sz*tx; H[2][1] += sz*ty; H[2][2] += sz*tz;
-  }
-  const { U, S, Vt } = svd3(H);
-  let R = matMul(matTranspose(Vt), matTranspose(U));
-  if (det3(R) < 0) {
-    Vt[2][0] *= -1; Vt[2][1] *= -1; Vt[2][2] *= -1;
-    R = matMul(matTranspose(Vt), matTranspose(U));
-  }
-  const RsrcC = matVec(R, srcC);
-  const t = [
-    tgtC[0] - RsrcC[0],
-    tgtC[1] - RsrcC[1],
-    tgtC[2] - RsrcC[2]
-  ];
-  return { R, t };
-}
-
-
-// ------------------------------------------------------
-// 5) ERROR COMPUTATION
-// ------------------------------------------------------
-function computeErrors(refShape, allShapes) {
-  console.log("computeErrors(): comparing all shapes to shape[0]. Count:", allShapes.length);
-  const N = allShapes.length;
-  const V = refShape.length;
-  const errors = new Array(N);
-  for (let i = 0; i < N; i++) {
-    errors[i] = new Array(V);
-    for (let v = 0; v < V; v++) {
-      errors[i][v] = euclideanDist(allShapes[i][v], refShape[v]);
-    }
-  }
-  return errors;
-}
-
-function findGlobalRange(errors) {
+  // find global min/max
   let minVal = Infinity, maxVal = -Infinity;
-  for (let i = 0; i < errors.length; i++) {
-    for (let v = 0; v < errors[i].length; v++) {
-      const val = errors[i][v];
-      if (val < minVal) minVal = val;
-      if (val > maxVal) maxVal = val;
+  for (let i=0; i<N; i++){
+    for (let v=0; v<nVerts; v++){
+      const val = errorsArray[i][v];
+      if (val<minVal) minVal=val;
+      if (val>maxVal) maxVal=val;
     }
   }
-  return { minVal, maxVal };
+  globalErrorMin = minVal;
+  globalErrorMax = maxVal;
+  console.log("-> error range:", globalErrorMin, "to", globalErrorMax);
+
+  // 2) setup VTK scene if not already
+  if (!renderer) {
+    setupVTKScene();
+  }
+
+  // 3) create LUT
+  lookupTable = createLookupTable(globalErrorMin, globalErrorMax);
+
+  // 4) set slider, show shape #0
+  slider = document.getElementById('variantSlider');
+  slider.min = 0;
+  slider.max = serverAlignedShapes.length - 1;
+  slider.value = 0;
+  updateDisplayedVariant(0);
 }
 
 
 // ------------------------------------------------------
-// 6) VTK SETUP
+// 5) VTK SCENE SETUP
 // ------------------------------------------------------
 function setupVTKScene() {
-  if (renderer) {
-    console.log("setupVTKScene() => already set, skipping.");
-    return;
-  }
-  console.log("setupVTKScene() => initializing new vtkFullScreenRenderWindow...");
+  console.log("setupVTKScene() ...");
   const fullScreenRenderer = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
     rootContainer: document.getElementById('vtkContainer'),
     containerStyle: {
@@ -501,67 +358,47 @@ function setupVTKScene() {
   renderer.addActor(vtkActor);
   renderer.resetCamera();
   renderWindow.render();
-  console.log("-> setupVTKScene: done creating renderer & actor.");
+  console.log("-> setupVTKScene done");
 }
 
 function createLookupTable(minVal, maxVal) {
-  console.log("createLookupTable() with range:", minVal, maxVal);
   const lut = vtk.Rendering.Core.vtkColorTransferFunction.newInstance();
-  lut.addRGBPoint(minVal, 0.0, 0.0, 1.0);
-  lut.addRGBPoint((minVal+maxVal)*0.5, 0.0, 1.0, 0.0);
-  lut.addRGBPoint(maxVal, 1.0, 0.0, 0.0);
+  lut.addRGBPoint(minVal, 0, 0, 1);  // blue
+  lut.addRGBPoint((minVal+maxVal)*0.5, 0, 1, 0); // green
+  lut.addRGBPoint(maxVal, 1, 0, 0);  // red
   return lut;
 }
 
 
 // ------------------------------------------------------
-// 7) RENDER SELECTED SHAPE
+// 6) RENDER SELECTED SHAPE
 // ------------------------------------------------------
 function updateDisplayedVariant(index) {
-  console.log("updateDisplayedVariant() => index=", index);
-  if (!alignedShapes || !errorsArray || !faces) {
-    console.warn("   -> No alignedShapes/errorsArray/faces. Exiting.");
-    return;
-  }
   index = parseInt(index);
-  if (index < 0 || index >= alignedShapes.length) {
-    console.warn("   -> index out of bounds. Exiting.");
-    return;
-  }
+  console.log(`updateDisplayedVariant(${index})...`);
 
-  const pointsArray = alignedShapes[index]; // V x 3
-  const shapeErrors = errorsArray[index];   // V
+  if (!serverAlignedShapes || !errorsArray || !faces) return;
+  if (index<0 || index>=serverAlignedShapes.length) return;
+
+  const pointsArray = serverAlignedShapes[index];  // Vx3
+  const shapeErrors = errorsArray[index];          // V
   const nVerts = pointsArray.length;
   const nFaces = faces.length;
 
-  console.log(`   -> Building PolyData for shape #${index}. nVerts=${nVerts}, nFaces=${nFaces}`);
-  // Check for any NaN
-  for (let i=0; i<nVerts; i++){
-    const [xx,yy,zz] = pointsArray[i];
-    if (Number.isNaN(xx) || Number.isNaN(yy) || Number.isNaN(zz)) {
-      console.warn(`   -> NaN found in pointsArray at i=${i}:`, pointsArray[i]);
-    }
-  }
-
-  // Convert points => vtkPoints
+  // Build polydata
   const vtkPoints = vtk.Common.Core.vtkPoints.newInstance();
   vtkPoints.setNumberOfPoints(nVerts);
-  for (let i = 0; i < nVerts; i++) {
+  for (let i=0; i<nVerts; i++){
     vtkPoints.setPoint(i, pointsArray[i][0], pointsArray[i][1], pointsArray[i][2]);
   }
 
-  // Convert faces => cell array
   const polys = new Uint32Array(nFaces * 4);
-  for (let f = 0; f < nFaces; f++) {
-    const offset = f * 4;
+  for (let f=0; f<nFaces; f++){
+    const offset = f*4;
     polys[offset]   = 3;
     polys[offset+1] = faces[f][0];
     polys[offset+2] = faces[f][1];
     polys[offset+3] = faces[f][2];
-    // If you suspect out-of-range face indices, log them:
-    // if (faces[f][0] >= nVerts || faces[f][1] >= nVerts || faces[f][2] >= nVerts) {
-    //   console.warn(`   -> Face ${f} has out-of-range index:`, faces[f], "nVerts=", nVerts);
-    // }
   }
 
   const polyData = vtk.Common.DataModel.vtkPolyData.newInstance();
@@ -580,198 +417,41 @@ function updateDisplayedVariant(index) {
   mapper.setLookupTable(lookupTable);
   mapper.setUseLookupTableScalarRange(true);
 
-  console.log("   -> calling renderer.resetCamera() and renderWindow.render() ...");
   renderer.resetCamera();
   renderWindow.render();
-  console.log("-> updateDisplayedVariant() done.");
+  console.log("-> updateDisplayedVariant done.");
 }
 
 
 // ------------------------------------------------------
-// HELPER MATH
+// HELPER
 // ------------------------------------------------------
 function euclideanDist(a, b) {
-  const dx = a[0] - b[0];
-  const dy = a[1] - b[1];
-  const dz = a[2] - b[2];
+  const dx = a[0]-b[0];
+  const dy = a[1]-b[1];
+  const dz = a[2]-b[2];
   return Math.sqrt(dx*dx + dy*dy + dz*dz);
 }
 
-function matMul(A, B) {
-  const out = [[0,0,0],[0,0,0],[0,0,0]];
-  for (let i=0; i<3; i++){
-    for (let j=0; j<3; j++){
-      out[i][j] = A[i][0]*B[0][j] + A[i][1]*B[1][j] + A[i][2]*B[2][j];
-    }
-  }
-  return out;
-}
-function matTranspose(M) {
-  return [
-    [M[0][0], M[1][0], M[2][0]],
-    [M[0][1], M[1][1], M[2][1]],
-    [M[0][2], M[1][2], M[2][2]]
-  ];
-}
-function matVec(M, v) {
-  return [
-    M[0][0]*v[0] + M[0][1]*v[1] + M[0][2]*v[2],
-    M[1][0]*v[0] + M[1][1]*v[1] + M[1][2]*v[2],
-    M[2][0]*v[0] + M[2][1]*v[1] + M[2][2]*v[2]
-  ];
-}
-function det3(M) {
-  return M[0][0]*(M[1][1]*M[2][2] - M[1][2]*M[2][1])
-       - M[0][1]*(M[1][0]*M[2][2] - M[1][2]*M[2][0])
-       + M[0][2]*(M[1][0]*M[2][1] - M[1][1]*M[2][0]);
-}
-
 
 // ------------------------------------------------------
-// SVD HELPER (3x3)
-// ------------------------------------------------------
-function svd3(H) {
-  const A = new Float64Array([
-    H[0][0], H[0][1], H[0][2],
-    H[1][0], H[1][1], H[1][2],
-    H[2][0], H[2][1], H[2][2]
-  ]);
-  return naiveSVD3(A);
-}
-
-function naiveSVD3(A) {
-  const A00 = A[0], A01 = A[1], A02 = A[2];
-  const A10 = A[3], A11 = A[4], A12 = A[5];
-  const A20 = A[6], A21 = A[7], A22 = A[8];
-
-  const M = [
-    [
-      A00*A00 + A10*A10 + A20*A20,
-      A00*A01 + A10*A11 + A20*A21,
-      A00*A02 + A10*A12 + A20*A22
-    ],
-    [
-      A01*A00 + A11*A10 + A21*A20,
-      A01*A01 + A11*A11 + A21*A21,
-      A01*A02 + A11*A12 + A21*A22
-    ],
-    [
-      A02*A00 + A12*A10 + A22*A20,
-      A02*A01 + A12*A11 + A22*A21,
-      A02*A02 + A12*A12 + A22*A22
-    ]
-  ];
-
-  const { eigenvectors, eigenvalues } = eigenDecomp3(M);
-  const sorted = [0,1,2].sort((i,j)=>eigenvalues[j]-eigenvalues[i]);
-  const Svals = sorted.map(idx => Math.sqrt(Math.max(eigenvalues[idx], 1e-12)));
-
-  const V = [[], [], []];
-  for (let col = 0; col < 3; col++) {
-    V[0][col] = eigenvectors[0][sorted[col]];
-    V[1][col] = eigenvectors[1][sorted[col]];
-    V[2][col] = eigenvectors[2][sorted[col]];
-  }
-  const Vt = matTranspose(V);
-
-  const invS = [1/Svals[0], 1/Svals[1], 1/Svals[2]];
-  let U_ = new Array(9).fill(0);
-  for (let i=0; i<3; i++){
-    for (let j=0; j<3; j++){
-      let sum=0;
-      for (let k=0; k<3; k++){
-        sum += A[i*3+k]*V[k][j];
-      }
-      U_[i*3 + j] = sum*invS[j];
-    }
-  }
-  const U = [
-    [U_[0], U_[1], U_[2]],
-    [U_[3], U_[4], U_[5]],
-    [U_[6], U_[7], U_[8]]
-  ];
-  return { U, S: Svals, Vt };
-}
-
-function eigenDecomp3(M) {
-  let A = new Float64Array([
-    M[0][0], M[0][1], M[0][2],
-    M[1][0], M[1][1], M[1][2],
-    M[2][0], M[2][1], M[2][2]
-  ]);
-
-  const EPS = 1e-12;
-  let V = new Float64Array([1,0,0, 0,1,0, 0,0,1]);
-  let maxIter=50;
-
-  for (let iter=0; iter<maxIter; iter++){
-    let p=0,q=0;
-    let maxVal=0;
-    for(let r=0;r<3;r++){
-      for(let c=r+1;c<3;c++){
-        const val = Math.abs(A[r*3+c]);
-        if(val>maxVal){ maxVal=val; p=r; q=c; }
-      }
-    }
-    if(maxVal<EPS) break;
-    const a_pp = A[p*3+p], a_qq = A[q*3+q], a_pq = A[p*3+q];
-    const theta = 0.5*Math.atan2(2*a_pq, a_pp - a_qq);
-    const c = Math.cos(theta), s = Math.sin(theta);
-
-    for(let k=0;k<3;k++){
-      const apk = A[p*3+k], aqk = A[q*3+k];
-      A[p*3+k] = c*apk - s*aqk;
-      A[q*3+k] = s*apk + c*aqk;
-    }
-    for(let k=0;k<3;k++){
-      const akp = A[k*3+p], akq = A[k*3+q];
-      A[k*3+p] = c*akp - s*akq;
-      A[k*3+q] = s*akp + c*akq;
-    }
-    A[p*3+p] = c*c*a_pp -2*s*c*a_pq + s*s*a_qq;
-    A[q*3+q] = s*s*a_pp +2*s*c*a_pq + c*c*a_qq;
-    A[p*3+q] = 0;
-    A[q*3+p] = 0;
-
-    for(let k=0;k<3;k++){
-      const vkp = V[k*3+p], vkq = V[k*3+q];
-      V[k*3+p] = c*vkp - s*vkq;
-      V[k*3+q] = s*vkp + c*vkq;
-    }
-  }
-
-  const eigenvalues = [ A[0], A[4], A[8] ];
-  const eigenvectors = [
-    [V[0], V[3], V[6]],
-    [V[1], V[4], V[7]],
-    [V[2], V[5], V[8]],
-  ];
-  return { eigenvalues, eigenvectors };
-}
-
-
-// ------------------------------------------------------
-// BUTTON / SLIDER HOOKS
+// BUTTON HOOKS
 // ------------------------------------------------------
 document.getElementById('fetchDataBtn').onclick = fetchPCAData;
 document.getElementById('sourceBtn').onclick = () => {
-  console.log("-> sourceBtn clicked: selectingSource=true...");
   selectingSource = true;
   selectingTarget = false;
   alert("Click any point in the scatter plot to set SOURCE.");
 };
 document.getElementById('targetBtn').onclick = () => {
-  console.log("-> targetBtn clicked: selectingTarget=true...");
   selectingTarget = true;
   selectingSource = false;
   alert("Click any point in the scatter plot to set TARGET.");
 };
 document.getElementById('computeBtn').onclick = computeInterpolation;
 
-document.getElementById('variantSlider').oninput = function(e) {
-  const val = e.target.value;
-  console.log(`slider oninput => variant=${val}`);
-  updateDisplayedVariant(val);
+document.getElementById('variantSlider').oninput = (e) => {
+  updateDisplayedVariant(e.target.value);
 };
 </script>
 
