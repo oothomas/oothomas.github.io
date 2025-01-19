@@ -99,7 +99,7 @@ let targetPoint = null;   // [xVal, yVal] in PC space
 
 // After interpolation
 let originalShapes = null;    // raw shapes from server: N x V x 3
-let faces = null;             // F x 3
+let faces = null;             // F x 3 (likely 1-based)
 let alignedShapes = null;     // N x V x 3 (after alignment)
 let errorsArray = null;       // N x V (error distances from reference)
 let globalErrorMin = 0;
@@ -267,7 +267,7 @@ async function computeInterpolation() {
     }
     const result = await resp.json();
     originalShapes = result.shapes; // NxVx3
-    faces = result.faces;           // Fx3
+    faces = result.faces;           // Fx3 (likely 1-based indexing)
     console.log("Received shapes (un-aligned):", originalShapes);
     console.log("Faces:", faces);
 
@@ -480,9 +480,9 @@ function createLookupTable(minVal, maxVal) {
   // Create a simple rainbow-like lookup table
   const lut = vtk.Rendering.Core.vtkColorTransferFunction.newInstance();
   // For example, we map minVal => blue, mid => green, maxVal => red
-  lut.addRGBPoint(minVal, 0.0, 0.0, 1.0);  // blue
-  lut.addRGBPoint((minVal+maxVal)*0.5, 0.0, 1.0, 0.0); // green
-  lut.addRGBPoint(maxVal, 1.0, 0.0, 0.0);  // red
+  lut.addRGBPoint(minVal, 0.0, 0.0, 1.0);
+  lut.addRGBPoint((minVal+maxVal)*0.5, 0.0, 1.0, 0.0);
+  lut.addRGBPoint(maxVal, 1.0, 0.0, 0.0);
   return lut;
 }
 
@@ -508,13 +508,14 @@ function updateDisplayedVariant(index) {
   }
 
   // Convert faces => cell array
+  // If the server returns 1-based faces, subtract 1 from each index
   const polys = new Uint32Array(nFaces * 4);
   for (let f = 0; f < nFaces; f++) {
     const offset = f * 4;
     polys[offset]   = 3; // tri
-    polys[offset+1] = faces[f][0];
-    polys[offset+2] = faces[f][1];
-    polys[offset+3] = faces[f][2];
+    polys[offset+1] = faces[f][0] - 1;
+    polys[offset+2] = faces[f][1] - 1;
+    polys[offset+3] = faces[f][2] - 1;
   }
 
   // Create PolyData
@@ -588,7 +589,6 @@ function det3(M) {
 function svd3(H) {
   // H is 3x3
   // We'll implement a small numeric SVD by eigen-decomposition of H^T H => V => U
-  // Convert H to a typed array for convenience
   const A = new Float64Array([
     H[0][0], H[0][1], H[0][2],
     H[1][0], H[1][1], H[1][2],
@@ -597,14 +597,8 @@ function svd3(H) {
   return naiveSVD3(A);
 }
 
-/**
- * naiveSVD3(A) => { U, S, Vt }
- * A is 9 elements, row-major.
- * This function is for demonstration; real usage might use a numeric library.
- */
 function naiveSVD3(A) {
   // A: row-major 3x3
-  // 1) M = A^T * A => eigen decomposition => V => S => then U
   const A00 = A[0], A01 = A[1], A02 = A[2];
   const A10 = A[3], A11 = A[4], A12 = A[5];
   const A20 = A[6], A21 = A[7], A22 = A[8];
@@ -630,73 +624,51 @@ function naiveSVD3(A) {
 
   // eigen-decompose M => V => diag(eigs) => S
   const { eigenvectors, eigenvalues } = eigenDecomp3(M);
-  // sort by descending eigenvalue
   const sorted = [0,1,2].sort((i,j)=>eigenvalues[j]-eigenvalues[i]);
   const Svals = sorted.map(idx => Math.sqrt(Math.max(eigenvalues[idx], 1e-12)));
 
-  // V = columns of eigenvectors in that sorted order => row-major
+  // V = columns of eigenvectors in that sorted order
   const V = [[], [], []];
   for (let col = 0; col < 3; col++) {
-    // place eigenvectors in columns
     V[0][col] = eigenvectors[0][sorted[col]];
     V[1][col] = eigenvectors[1][sorted[col]];
     V[2][col] = eigenvectors[2][sorted[col]];
   }
-
-  // build Vt
   const Vt = matTranspose(V);
 
   // U = A * V * S^-1
-  // We do A * (V / S)
   const invS = [1/Svals[0], 1/Svals[1], 1/Svals[2]];
   let U_ = new Array(9).fill(0);
-  // (A * V) => 3x3 times 3x3
   for (let i=0; i<3; i++){
     for (let j=0; j<3; j++){
       let sum=0;
       for (let k=0; k<3; k++){
         sum += A[i*3+k]*V[k][j];
       }
-      // then scale by 1/S[j]
-      U_[i*3 + j] = sum*invS[j];
+      U_[i*3 + j] = sum * invS[j];
     }
   }
-  // Convert U_ => 3x3
   const U = [
     [U_[0], U_[1], U_[2]],
     [U_[3], U_[4], U_[5]],
     [U_[6], U_[7], U_[8]]
   ];
-  // done
-  return {
-    U,
-    S: Svals,
-    Vt
-  };
+  return { U, S: Svals, Vt };
 }
 
-/**
- * eigenDecomp3(M): naive eigen decomposition of a 3x3 real symmetric matrix.
- * returns { eigenvalues, eigenvectors }, each array of length 3
- */
 function eigenDecomp3(M) {
-  // For real, symmetric 3x3, we can do a naive Jacobi or direct approach.
-  // For brevity, let's do a quick approximate method.
-  // In practice, you'd use a numeric library.
-
-  // Convert M to typed array
+  // naive Jacobi for real-symmetric 3x3
   let A = new Float64Array([
     M[0][0], M[0][1], M[0][2],
     M[1][0], M[1][1], M[1][2],
     M[2][0], M[2][1], M[2][2]
   ]);
 
-  // We'll just do a naive jacobi approach
   const EPS = 1e-12;
-  let V = new Float64Array([1,0,0, 0,1,0, 0,0,1]); // identity
+  let V = new Float64Array([1,0,0, 0,1,0, 0,0,1]);
   let maxIter=50;
+
   for (let iter=0; iter<maxIter; iter++){
-    // find max off-diagonal
     let p=0,q=0;
     let maxVal=0;
     for(let r=0;r<3;r++){
@@ -709,8 +681,8 @@ function eigenDecomp3(M) {
     const a_pp = A[p*3+p], a_qq = A[q*3+q], a_pq = A[p*3+q];
     const theta = 0.5*Math.atan2(2*a_pq, a_pp - a_qq);
     const c = Math.cos(theta), s = Math.sin(theta);
-    // apply rotation in p,q plane to A
-    // A' = R^T A R
+
+    // A <- R^T A R
     for(let k=0;k<3;k++){
       const apk = A[p*3+k], aqk = A[q*3+k];
       A[p*3+k] = c*apk - s*aqk;
@@ -721,22 +693,20 @@ function eigenDecomp3(M) {
       A[k*3+p] = c*akp - s*akq;
       A[k*3+q] = s*akp + c*akq;
     }
-    // fix diag
     A[p*3+p] = c*c*a_pp -2*s*c*a_pq + s*s*a_qq;
     A[q*3+q] = s*s*a_pp +2*s*c*a_pq + c*c*a_qq;
-    A[p*3+q] = 0; A[q*3+p] = 0;
+    A[p*3+q] = 0;
+    A[q*3+p] = 0;
 
-    // update V
+    // Update eigenvectors
     for(let k=0;k<3;k++){
       const vkp = V[k*3+p], vkq = V[k*3+q];
       V[k*3+p] = c*vkp - s*vkq;
       V[k*3+q] = s*vkp + c*vkq;
     }
   }
-  // diagonal of A are eigenvalues
+
   const eigenvalues = [ A[0], A[4], A[8] ];
-  // V are columns = eigenvectors
-  // we can repackage V into a 2D array
   const eigenvectors = [
     [V[0], V[3], V[6]],
     [V[1], V[4], V[7]],
