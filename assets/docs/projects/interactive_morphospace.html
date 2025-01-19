@@ -118,7 +118,7 @@ let slider = null;
 // ------------------------------------------------------
 async function fetchPCAData() {
   try {
-    const resp = await fetch("https://3.138.141.8:443/get-initial", { method: 'GET' });
+    const resp = await fetch("https://morphvq.net/get-initial", { method: 'GET' });
     if (!resp.ok) {
       throw new Error(`Fetch error: ${resp.status} - ${resp.statusText}`);
     }
@@ -257,7 +257,7 @@ async function computeInterpolation() {
   console.log("Sending /interpolate payload:", payload);
 
   try {
-    const resp = await fetch("https://3.138.141.8:443/interpolate", {
+    const resp = await fetch("https://morphvq.net/interpolate", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
