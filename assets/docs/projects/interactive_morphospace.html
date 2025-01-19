@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Morphospace Visualization Tool (No Pan/Zoom)</title>
+  <title>Morphospace Visualization Tool (No Built-in Interaction)</title>
 
   <!-- 1) Plotly for 2D scatter plot -->
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -21,11 +21,7 @@
     h1 {
       margin-bottom: 0.5em;
     }
-    p, li {
-      line-height: 1.5em;
-    }
 
-    /* Top row with controls */
     .controls {
       margin-bottom: 1em;
     }
@@ -120,10 +116,8 @@
 </head>
 <body>
 
-<!-- Page Title -->
-<h1>Morphospace Visualization Tool (No Pan/Zoom)</h1>
+<h1>Morphospace Visualization Tool (No Built-in Interaction)</h1>
 
-<!-- Control Buttons & Selectors -->
 <div class="controls">
   <button id="fetchDataBtn">Fetch PCA Data</button>
 
@@ -138,33 +132,26 @@
   <button id="computeBtn" class="disabled">Compute &amp; Interpolate</button>
 </div>
 
-<!-- Info about current source/target picks -->
 <div id="infoBox">
   Source: (--, --)<br/>
   Target: (--, --)
 </div>
 
-<!-- Loading Spinner Overlay -->
 <div id="spinner">
   <div id="spinnerText">Loading...</div>
 </div>
 
-<!-- Main Flex Container: Plotly (left), VTK (right) -->
 <div id="mainFlex">
   <div class="flexItem">
-    <!-- Plotly chart -->
     <div id="plotlyDiv"></div>
-    <!-- Slider for shape variants -->
     <input type="range" id="variantSlider" min="0" max="0" value="0" step="1" />
   </div>
 
   <div class="flexItem">
-    <!-- VTK container -->
     <div id="vtkContainer"></div>
   </div>
 </div>
 
-<!-- Instructions Section at the Bottom -->
 <div id="instructions">
   <h2>How to Use This Tool</h2>
   <ol>
@@ -181,7 +168,7 @@
     <li>
       <strong>Pick Source &amp; Target</strong>:
       <ul>
-        <li>Click “<em>Set Source</em>” and single-click anywhere in the chart. The chosen point becomes the <em>source</em> (green).</li>
+        <li>Click “<em>Set Source</em>” and single-click anywhere in the chart. That location becomes the <em>source</em> (green).</li>
         <li>Click “<em>Set Target</em>” and single-click in the chart for the <em>target</em> (blue).</li>
       </ul>
       A dashed gray line indicates the interpolation path between source and target.
@@ -218,7 +205,6 @@ let specimenIds = null;
 let groups = null;
 let xPCIndex=0, yPCIndex=1;
 
-// For picking source/target
 let selectingSource=false;
 let selectingTarget=false;
 let sourceCoord=null;
@@ -228,7 +214,7 @@ let targetPC=null;
 
 // Reusable VTK scene
 let renderer=null, renderWindow=null, vtkActor=null, lookupTable=null;
-let scalarBarActor=null; // for color legend
+let scalarBarActor=null;
 
 // Shapes / interpolation
 let serverAlignedShapes=null;
@@ -240,6 +226,7 @@ let globalErrorMin=0, globalErrorMax=1;
 let plotDiv=null;
 let groupTraces=null;
 let layout=null;
+
 
 // ------------------------------------------------------
 // UTILS
@@ -274,7 +261,7 @@ function updateComputeBtnState() {
   enableButton("computeBtn", (sourcePC && targetPC));
 }
 
-// Show/hide the spinner overlay
+// Show/hide spinner
 function showSpinner(show) {
   const spinDiv = document.getElementById('spinner');
   spinDiv.style.display = show ? 'flex' : 'none';
@@ -322,6 +309,7 @@ function resetInterpolationData() {
   slider.min=0; slider.max=0; slider.value=0;
 }
 
+
 // ------------------------------------------------------
 // 1) FETCH PCA
 // ------------------------------------------------------
@@ -357,16 +345,14 @@ document.getElementById('fetchDataBtn').onclick = async()=>{
 function plotDataByGroup() {
   if(!pcaData || !groups) return;
 
-  // Group by name => arrays of x,y + text
   const groupMap = {};
   for(let i=0; i<pcaData.length; i++){
     const g= groups[i];
     if(!groupMap[g]) {
-      groupMap[g]={ x:[], y:[], text:[] };
+      groupMap[g]={ x:[], y:[] };
     }
     groupMap[g].x.push( pcaData[i][xPCIndex] );
     groupMap[g].y.push( pcaData[i][yPCIndex] );
-    groupMap[g].text.push( specimenIds[i] );
   }
 
   groupTraces=[];
@@ -378,36 +364,28 @@ function plotDataByGroup() {
       mode:'markers',
       type:'scatter',
       name: gName,
-      marker:{ size:6, color: colorMap[gName]||'gray' },
-      text: groupMap[gName].text,
-      hoverinfo: 'text+x+y',
-      hovertemplate: '(%{x:.2f}, %{y:.2f})<br>%{text}<extra></extra>'
+      marker:{ size:6, color: colorMap[gName]||'gray' }
     });
   }
 
-  // The key: dragmode 'none' => no pan/zoom box or select
+  // Because we want absolutely no Plotly interaction, we rely on staticPlot: true
   layout = {
-    title: `PCA Morphospace (PC${xPCIndex+1} vs PC${yPCIndex+1})`,
-    hovermode: 'closest',
-    showlegend: true,
-    dragmode: 'none'
+    title: `PCA Morphospace (PC${xPCIndex+1} vs PC${yPCIndex+1})`
   };
 
   plotDiv = document.getElementById('plotlyDiv');
 
-  // config removes zoom/pan buttons
+  // config with staticPlot => no pan, no zoom, no built-in hover
+  // (any built-in interactions are disabled, so we handle "click anywhere" ourselves)
   const config = {
-    displayModeBar: true,      // show the top bar
-    scrollZoom: false,         // no scroll zoom
-    modeBarButtonsToRemove: [
-      'zoom2d','pan2d','select2d','lasso2d',
-      'autoScale2d','zoomIn2d','zoomOut2d','resetScale2d'
-    ],
-    displaylogo: false         // remove Plotly logo
+    staticPlot: true,
+    displayModeBar: false,  // hide the top mode bar
+    displaylogo: false
   };
 
   Plotly.newPlot(plotDiv, groupTraces, layout, config);
 
+  // We'll still handle raw mousedown for "click anywhere"
   plotDiv.addEventListener('mousedown', onPlotMousedown);
 }
 
@@ -455,6 +433,7 @@ function handlePCChange() {
 // MOUSEDOWN => "CLICK ANYWHERE"
 // ------------------------------------------------------
 function onPlotMousedown(ev){
+  // "Click anywhere" => only if we are picking source or target
   if(!selectingSource && !selectingTarget) return;
   ev.preventDefault();
 
@@ -487,6 +466,7 @@ function onPlotMousedown(ev){
   updateComputeBtnState();
 }
 
+// Because the plot is static, we handle pixel->data ourselves
 function pixelToDataCoords(ev){
   if(!plotDiv._fullLayout) return null;
   const fl= plotDiv._fullLayout;
@@ -508,16 +488,18 @@ function pixelToDataCoords(ev){
   const fracX= pxInsideX/s.w;
   const fracY= 1-(pxInsideY/s.h);
 
-  const xVal= minX+ fracX*(maxX-minX);
-  const yVal= minY+ fracY*(maxY-minY);
+  const xVal= minX + fracX*(maxX-minX);
+  const yVal= minY + fracY*(maxY-minY);
   return [xVal,yVal];
 }
 
 function redrawPlot(){
   if(!groupTraces) return;
+
+  // We'll copy the original groupTraces to show the data
   const data= JSON.parse(JSON.stringify(groupTraces));
 
-  // Source
+  // Show source if set
   if(sourceCoord){
     data.push({
       x:[sourceCoord[0]],
@@ -529,7 +511,7 @@ function redrawPlot(){
       showlegend:false
     });
   }
-  // Target
+  // Show target if set
   if(targetCoord){
     data.push({
       x:[targetCoord[0]],
@@ -541,7 +523,7 @@ function redrawPlot(){
       showlegend:false
     });
   }
-  // line if both exist
+  // Dashed line if both exist
   if(sourceCoord && targetCoord){
     data.push({
       x:[sourceCoord[0], targetCoord[0]],
@@ -554,16 +536,8 @@ function redrawPlot(){
     });
   }
 
-  // Pass the same config to keep the mode bar stripped out
-  Plotly.react(plotDiv, data, layout, {
-    displayModeBar: true,
-    scrollZoom: false,
-    modeBarButtonsToRemove: [
-      'zoom2d','pan2d','select2d','lasso2d',
-      'autoScale2d','zoomIn2d','zoomOut2d','resetScale2d'
-    ],
-    displaylogo: false
-  });
+  // Use staticPlot: true => no interaction, no hover, no pan
+  Plotly.react(plotDiv, data, layout, { staticPlot: true });
 }
 
 // ------------------------------------------------------
@@ -592,7 +566,6 @@ document.getElementById('computeBtn').onclick= async()=>{
   clearVTKShapes();
   resetInterpolationData();
 
-  // Show spinner
   showSpinner(true);
 
   const payload= { pc_scores: [ sourcePC, targetPC ] };
@@ -660,10 +633,8 @@ function computeErrorsAndSetupScene(){
   updateDisplayedVariant(0);
 }
 
-// Reuse or create the VTK scene
 function setupOrReuseVTKScene(){
   if(!renderer){
-    console.log("Creating VTK scene once...");
     const fsRenderer= vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
       rootContainer: document.getElementById('vtkContainer'),
       containerStyle:{
@@ -690,7 +661,6 @@ function setupOrReuseVTKScene(){
     renderWindow.render();
   }
   else {
-    console.log("Reusing existing VTK scene...");
     if(!vtkActor) {
       const mapper= vtk.Rendering.Core.vtkMapper.newInstance();
       mapper.setColorModeToMapScalars();
@@ -704,7 +674,6 @@ function setupOrReuseVTKScene(){
   }
 }
 
-// Build color transfer function
 function createLookupTable(minVal,maxVal){
   const lut= vtk.Rendering.Core.vtkColorTransferFunction.newInstance();
   lut.addRGBPoint(minVal, 0,0,1);
@@ -761,6 +730,5 @@ function updateDisplayedVariant(index){
   renderWindow.render();
 }
 </script>
-
 </body>
 </html>
