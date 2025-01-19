@@ -168,7 +168,7 @@
     <li>
       <strong>Pick Source &amp; Target</strong>:
       <ul>
-        <li>Click “<em>Set Source</em>” and single-click anywhere in the chart. That location becomes the <em>source</em> (green).</li>
+        <li>Click “<em>Set Source</em>” and single-click anywhere in the chart. The chosen point becomes the <em>source</em> (green).</li>
         <li>Click “<em>Set Target</em>” and single-click in the chart for the <em>target</em> (blue).</li>
       </ul>
       A dashed gray line indicates the interpolation path between source and target.
@@ -292,6 +292,7 @@ function clearVTKShapes() {
     lookupTable.delete();
     lookupTable=null;
   }
+  // remove the scalarBarActor if present
   if(scalarBarActor) {
     renderer.removeActor2D(scalarBarActor);
     scalarBarActor.delete();
@@ -322,7 +323,7 @@ document.getElementById('fetchDataBtn').onclick = async()=>{
     pcaData = data.components;
     specimenIds = data.specimen_ids;
 
-    // Build groups (e.g., "Mouse"/"Peromyscus")
+    // Build groups (e.g. "Mouse"/"Peromyscus")
     groups = specimenIds.map(id=>{
       const prefix = id.split("_")[0];
       return (prefix.length===3)? "Mouse":"Peromyscus";
@@ -368,18 +369,16 @@ function plotDataByGroup() {
     });
   }
 
-  // Because we want absolutely no Plotly interaction, we rely on staticPlot: true
   layout = {
     title: `PCA Morphospace (PC${xPCIndex+1} vs PC${yPCIndex+1})`
   };
 
   plotDiv = document.getElementById('plotlyDiv');
 
-  // config with staticPlot => no pan, no zoom, no built-in hover
-  // (any built-in interactions are disabled, so we handle "click anywhere" ourselves)
+  // staticPlot => no built-in interactions
   const config = {
     staticPlot: true,
-    displayModeBar: false,  // hide the top mode bar
+    displayModeBar: false,
     displaylogo: false
   };
 
@@ -466,7 +465,6 @@ function onPlotMousedown(ev){
   updateComputeBtnState();
 }
 
-// Because the plot is static, we handle pixel->data ourselves
 function pixelToDataCoords(ev){
   if(!plotDiv._fullLayout) return null;
   const fl= plotDiv._fullLayout;
@@ -536,7 +534,7 @@ function redrawPlot(){
     });
   }
 
-  // Use staticPlot: true => no interaction, no hover, no pan
+  // Use staticPlot: true => no interaction
   Plotly.react(plotDiv, data, layout, { staticPlot: true });
 }
 
@@ -622,7 +620,10 @@ function computeErrorsAndSetupScene(){
   // colorbar
   scalarBarActor = vtk.Rendering.Core.vtkScalarBarActor.newInstance();
   scalarBarActor.setScalarsToColors(lookupTable);
-  scalarBarActor.setNumberOfLabels(5);
+
+  // remove setNumberOfLabels(...) call => older VTK might not have it
+  // scalarBarActor.setNumberOfLabels(5);
+
   scalarBarActor.setTitle("Error");
   renderer.addActor2D(scalarBarActor);
 
