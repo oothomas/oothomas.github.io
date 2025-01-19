@@ -2,12 +2,12 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>VTK Reuse Single Window + Plotly Click Anywhere + Groups</title>
+  <title>Reusing Single VTK Scene + Plotly Click Anywhere</title>
 
-  <!-- 1) Plotly -->
+  <!-- 1) Plotly for 2D scatter plot -->
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
-  <!-- 2) VTK.js -->
+  <!-- 2) VTK.js for 3D rendering -->
   <script src="https://unpkg.com/vtk.js"></script>
 
   <style>
@@ -20,7 +20,8 @@
     .controls { margin-bottom: 1em; }
     select, button { margin-right: 10px; }
     #plotlyDiv {
-      width: 600px; height: 480px;
+      width: 600px;
+      height: 480px;
       border: 1px solid #ccc;
       background: white;
       margin-bottom: 1em;
@@ -31,23 +32,24 @@
       margin: 10px 0 20px 0;
     }
     #vtkContainer {
-      width: 800px; height: 600px;
+      width: 800px;
+      height: 600px;
       border: 1px solid #ccc;
       background-color: #EFEFEF;
-      position: relative;
     }
     .disabled {
-      opacity: 0.4; pointer-events: none;
+      opacity: 0.4;
+      pointer-events: none;
     }
     #infoBox {
-      font-weight: bold; margin-bottom: 10px;
+      font-weight: bold;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
 
-<h1>Single VTK Window Reuse + Plotly “Click Anywhere” + Group Legend</h1>
-
+<h1>Single VTK Scene Reused + Plotly “Click Anywhere” + Groups</h1>
 <div class="controls">
   <button id="fetchDataBtn">Fetch PCA Data</button>
 
@@ -72,7 +74,6 @@
 <input type="range" id="variantSlider" min="0" max="0" value="0" step="1" />
 <div id="vtkContainer"></div>
 
-
 <script>
 // ------------------------------------------------------
 // GLOBALS
@@ -82,11 +83,12 @@ let specimenIds = null;
 let groups = null;
 let xPCIndex=0, yPCIndex=1;
 
+// For picking source/target
 let selectingSource=false, selectingTarget=false;
 let sourceCoord=null, targetCoord=null;
 let sourcePC=null, targetPC=null;
 
-// For the single VTK usage
+// Single VTK usage
 let renderer=null, renderWindow=null, vtkActor=null, lookupTable=null;
 let serverAlignedShapes=null, faces=null, errorsArray=null;
 let globalErrorMin=0, globalErrorMax=1;
@@ -102,8 +104,8 @@ let layout=null;
 // ------------------------------------------------------
 function enableButton(id, enable) {
   const btn = document.getElementById(id);
-  if(enable) btn.classList.remove("disabled");
-  else       btn.classList.add("disabled");
+  if (enable) btn.classList.remove("disabled");
+  else        btn.classList.add("disabled");
 }
 
 function zeroedPCArray() {
@@ -129,38 +131,24 @@ function updateComputeBtnState() {
   enableButton("computeBtn", canCompute);
 }
 
-
 // ------------------------------------------------------
 // CLEARING
 // ------------------------------------------------------
-
 // Remove the user’s picks
 function clearSourceTarget() {
   selectingSource=false;
   selectingTarget=false;
-  sourceCoord=null; targetCoord=null;
-  sourcePC=null;    targetPC=null;
+  sourceCoord=null;
+  targetCoord=null;
+  sourcePC=null;
+  targetPC=null;
   updateInfoBox();
   updateComputeBtnState();
   redrawPlot();
 }
 
-// Reuse one VTK scene. If we want to completely remove it (like switching PC dims), do so.
-function destroyVTKScene() {
-  // Only call if you want to truly discard the old window
-  if(renderer) {
-    renderer.delete();
-    renderWindow.delete();
-    renderer=null;
-    renderWindow=null;
-    vtkActor=null;
-    lookupTable=null;
-  }
-}
-
-// Instead of destroying the scene, we can just remove old shapes if needed:
+// We will keep the scene but remove the actor + LUT
 function clearVTKShapes() {
-  // remove old actor if any
   if(renderer && vtkActor) {
     renderer.removeActor(vtkActor);
     vtkActor.delete();
@@ -170,11 +158,9 @@ function clearVTKShapes() {
     lookupTable.delete();
     lookupTable=null;
   }
-  // now we can add a new actor next time
-  // we do NOT call delete on renderer, so we keep the same window
 }
 
-// Also reset the data arrays
+// Also reset the data arrays so we have no shapes
 function resetInterpolationData() {
   serverAlignedShapes=null;
   faces=null;
@@ -195,10 +181,10 @@ document.getElementById('fetchDataBtn').onclick= async()=>{
     if(!resp.ok) throw new Error(`Fetch error: ${resp.status}`);
     const data= await resp.json();
 
-    pcaData= data.components;       // Nx15
-    specimenIds= data.specimen_ids; // Nx1
+    pcaData= data.components;
+    specimenIds= data.specimen_ids;
 
-    // Build group array, "Mouse" if prefix len=3, else "Peromyscus"
+    // Build group array, e.g. "Mouse" if prefix len=3, else "Peromyscus"
     groups= specimenIds.map( id=>{
       const prefix= id.split("_")[0];
       return (prefix.length===3) ? "Mouse":"Peromyscus";
@@ -206,11 +192,9 @@ document.getElementById('fetchDataBtn').onclick= async()=>{
 
     fillPCSelects();
     plotDataByGroup();
-    enableButton("sourceBtn", true);
-    enableButton("targetBtn", true);
 
-    console.log("pcaData shape=",pcaData.length,"x",pcaData[0].length);
-    console.log("specimenIds length=", specimenIds.length);
+    enableButton("sourceBtn",true);
+    enableButton("targetBtn",true);
   }
   catch(err){
     alert("Error fetching PCA: "+err.message);
@@ -220,38 +204,35 @@ document.getElementById('fetchDataBtn').onclick= async()=>{
 
 // 2) Building group traces => newPlot
 function plotDataByGroup() {
-  if(!pcaData||!groups) return;
-
+  if(!pcaData || !groups) return;
   // Partition points by group
   let groupMap= {};
   for(let i=0;i<pcaData.length;i++){
     let g= groups[i];
-    if(!groupMap[g]) groupMap[g]= {x:[], y:[]};
+    if(!groupMap[g]) groupMap[g]={ x:[], y:[] };
     groupMap[g].x.push(pcaData[i][xPCIndex]);
     groupMap[g].y.push(pcaData[i][yPCIndex]);
   }
   // build traces
   let colorMap= {"Mouse":"blue","Peromyscus":"orange"};
   groupTraces=[];
-  for(let gName in groupMap){
+  for(let gName in groupMap) {
     groupTraces.push({
       x: groupMap[gName].x,
       y: groupMap[gName].y,
-      mode:'markers',
-      type:'scatter',
+      mode: 'markers',
+      type: 'scatter',
       name: gName,
-      marker:{size:6, color: colorMap[gName]||'gray'}
+      marker:{ size:6, color: colorMap[gName]||'gray' }
     });
   }
 
   layout={
     title:`PCA Morphospace (PC${xPCIndex+1} vs PC${yPCIndex+1})`,
-    showlegend:true,
-    // No built-in pan/zoom => staticPlot
-    // Or we can do dragmode:'none'
+    showlegend:true
   };
   plotDiv= document.getElementById('plotlyDiv');
-  Plotly.newPlot(plotDiv, groupTraces, layout, {staticPlot:true});
+  Plotly.newPlot(plotDiv, groupTraces, layout, { staticPlot:true });
 
   // We'll add "mousedown" to capture clicks anywhere
   plotDiv.addEventListener('mousedown', onMouseDownPlot);
@@ -260,16 +241,14 @@ function plotDataByGroup() {
 function fillPCSelects(){
   const xSel= document.getElementById('xPCSelect');
   const ySel= document.getElementById('yPCSelect');
-  xSel.innerHTML=""; ySel.innerHTML="";
-
+  xSel.innerHTML="";
+  ySel.innerHTML="";
   for(let i=1;i<=15;i++){
     let oX= document.createElement('option');
-    oX.value=i; oX.textContent="PC"+i;
-    xSel.appendChild(oX);
+    oX.value=i; oX.textContent="PC"+i; xSel.appendChild(oX);
 
     let oY= document.createElement('option');
-    oY.value=i; oY.textContent="PC"+i;
-    ySel.appendChild(oY);
+    oY.value=i; oY.textContent="PC"+i; ySel.appendChild(oY);
   }
   xSel.value="1";
   ySel.value="2";
@@ -286,10 +265,11 @@ function fillPCSelects(){
   };
 }
 
+// On PC dimension change => just remove shapes + picks, re-plot
 function handlePCChange() {
-  console.log("PC changed => clearing picks + clearing VTK + rePlot by group");
+  console.log("PC changed => clearing picks + shapes + rePlot");
   clearSourceTarget();
-  destroyVTKScene();  // if you want to fully discard the old window
+  clearVTKShapes();
   resetInterpolationData();
   plotDataByGroup();
 }
@@ -301,7 +281,7 @@ function onMouseDownPlot(ev){
   ev.preventDefault();
 
   const coords= pixelToDataCoords(ev);
-  if(!coords){
+  if(!coords) {
     console.log("Clicked outside data area");
     return;
   }
@@ -323,13 +303,12 @@ function onMouseDownPlot(ev){
     alert(`Target => (${xVal.toFixed(3)}, ${yVal.toFixed(3)})`);
   }
   redrawPlot();
-  updateComputeBtnState();
   updateInfoBox();
+  updateComputeBtnState();
 }
 
 // Pixel->data conversion
 function pixelToDataCoords(ev){
-  // We'll read plotDiv._fullLayout, as with the earlier approach
   if(!plotDiv._fullLayout) return null;
   const fl= plotDiv._fullLayout;
   if(!fl.xaxis||!fl.yaxis||!fl._size) return null;
@@ -353,11 +332,10 @@ function pixelToDataCoords(ev){
   return [xVal,yVal];
 }
 
+// Re-draw with groupTraces + optional markers for source/target + line
 function redrawPlot() {
   if(!groupTraces) return;
-  // clone them
   const data= JSON.parse(JSON.stringify(groupTraces));
-
   // add source/target if exist
   if(sourceCoord){
     data.push({
@@ -392,7 +370,7 @@ function redrawPlot() {
       showlegend:false
     });
   }
-  Plotly.react(plotDiv, data, layout, {staticPlot:true});
+  Plotly.react(plotDiv, data, layout, { staticPlot:true });
 }
 
 // user sets source/target
@@ -407,7 +385,6 @@ document.getElementById('targetBtn').onclick=()=>{
   alert("Click anywhere in the chart to set TARGET");
 };
 
-
 // ------------------------------------------------------
 // 3) COMPUTE & INTERPOLATE
 // ------------------------------------------------------
@@ -416,7 +393,7 @@ document.getElementById('computeBtn').onclick= async()=>{
     alert("Need both source & target!");
     return;
   }
-  // Instead of destroying the entire scene, we just remove old shapes
+  // Remove any old shapes from the scene
   clearVTKShapes();
   resetInterpolationData();
 
@@ -463,28 +440,26 @@ function computeErrorsAndSetupScene(){
   globalErrorMax=maxVal;
   console.log("Error range:", minVal,"..",maxVal);
 
-  // Create or reuse the VTK scene
-  setupVTKSceneIfNeeded();
-  // create LUT
+  setupOrReuseVTKScene();
   lookupTable= createLookupTable(minVal, maxVal);
 
-  // show shape #0
   let slider= document.getElementById("variantSlider");
   slider.min=0; slider.max=N-1; slider.value=0;
   updateDisplayedVariant(0);
 }
 
-function setupVTKSceneIfNeeded(){
-  // Only do the newInstance() stuff if we haven't already
+function setupOrReuseVTKScene(){
+  // If we haven't created the scene at all, do so once
   if(!renderer) {
-    console.log("Creating VTK FullScreenRenderWindow once...");
-    const fsr= vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
+    console.log("Creating first VTK scene once...");
+    const fullScreenRenderer= vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
       rootContainer: document.getElementById('vtkContainer'),
-      containerStyle:{ width:'100%', height:'100%', position:'relative', overflow:'hidden'}
+      containerStyle:{ width:'100%', height:'100%', position:'relative', overflow:'hidden' }
     });
-    renderWindow= fsr.getRenderWindow();
-    renderer= fsr.getRenderer();
+    renderWindow= fullScreenRenderer.getRenderWindow();
+    renderer= fullScreenRenderer.getRenderer();
 
+    // We'll create a single actor; we'll feed it new geometry each time
     const mapper= vtk.Rendering.Core.vtkMapper.newInstance();
     mapper.setColorModeToMapScalars();
     mapper.setScalarModeToUsePointData();
@@ -498,6 +473,17 @@ function setupVTKSceneIfNeeded(){
     renderWindow.render();
   } else {
     console.log("VTK scene already created => reusing");
+    // We'll create a new vtkActor, if the old one was removed
+    if(!vtkActor) {
+      const mapper= vtk.Rendering.Core.vtkMapper.newInstance();
+      mapper.setColorModeToMapScalars();
+      mapper.setScalarModeToUsePointData();
+      mapper.setInterpolateScalarsBeforeMapping(true);
+
+      vtkActor= vtk.Rendering.Core.vtkActor.newInstance();
+      vtkActor.setMapper(mapper);
+      renderer.addActor(vtkActor);
+    }
   }
 }
 
@@ -509,6 +495,7 @@ function createLookupTable(minVal,maxVal){
   return lut;
 }
 
+// The slider for picking which shape in the series to display
 document.getElementById('variantSlider').oninput= e=>{
   updateDisplayedVariant(parseInt(e.target.value));
 };
@@ -520,7 +507,6 @@ function updateDisplayedVariant(index){
   let errs= errorsArray[index];
   let V= shape.length, F= faces.length;
 
-  // build polydata
   const vtkPoints= vtk.Common.Core.vtkPoints.newInstance();
   vtkPoints.setNumberOfPoints(V);
   for(let i=0;i<V;i++){
@@ -540,19 +526,21 @@ function updateDisplayedVariant(index){
 
   const scalarsData= new Float32Array(errs);
   const scalars= vtk.Common.Core.vtkDataArray.newInstance({
-    name:'Error', values: scalarsData
+    name:'Error', values:scalarsData
   });
   polyData.getPointData().setScalars(scalars);
 
-  // feed actor's mapper
+  // feed geometry to vtkActor
   const mapper= vtkActor.getMapper();
   mapper.setInputData(polyData);
   mapper.setLookupTable(lookupTable);
   mapper.setUseLookupTableScalarRange(true);
 
+  // We do want to resetCamera each time (per your requirement)
   renderer.resetCamera();
   renderWindow.render();
 }
 </script>
+
 </body>
 </html>
