@@ -116,7 +116,7 @@
 </head>
 <body>
 
-<h1>Morphospace Visualization Tool (No Built-in Interaction)</h1>
+<h1>DISCOae Morphospace Visualization Tool</h1>
 
 <div class="controls">
   <button id="fetchDataBtn">Fetch PCA Data</button>
@@ -176,21 +176,19 @@
     <li>
       <strong>Compute &amp; Interpolate</strong>:
       Once both source and target are set, the “<em>Compute &amp; Interpolate</em>” button becomes enabled.
-      Click it to send the zeroed PC array (with only those 2D coords set) to the server.
+      Click it to send the points for interpolation to the server.
     </li>
     <li>
       <strong>View 3D Shapes</strong>:
       <ul>
         <li>The server returns a series of shapes (aligned) colored by per-vertex error relative to shape #0.</li>
         <li>Use the slider below the scatter plot to step through the shapes [0..N-1].</li>
-        <li>The 3D viewer is 600px wide, matching the chart’s width for a cleaner layout.</li>
       </ul>
     </li>
     <li>
       <strong>Repeat</strong>:
       <ul>
         <li>You can change the PC axes at any time (this clears shapes and picks), then pick new source/target and run interpolation again.</li>
-        <li>We reuse a single VTK window each time, so you won’t see multiple 3D windows appear.</li>
       </ul>
     </li>
   </ol>
@@ -647,6 +645,7 @@ function setupOrReuseVTKScene(){
     });
     renderWindow= fsRenderer.getRenderWindow();
     renderer= fsRenderer.getRenderer();
+    renderer.setBackground(0.94, 0.94, 0.94);
 
     // single actor
     const mapper= vtk.Rendering.Core.vtkMapper.newInstance();
@@ -677,9 +676,13 @@ function setupOrReuseVTKScene(){
 
 function createLookupTable(minVal,maxVal){
   const lut= vtk.Rendering.Core.vtkColorTransferFunction.newInstance();
-  lut.addRGBPoint(minVal, 0,0,1);
-  lut.addRGBPoint( (minVal+maxVal)*0.5, 0,1,0 );
-  lut.addRGBPoint(maxVal, 1,0,0);
+
+  // Light pastel orange at the low end
+  lut.addRGBPoint(minVal, 1.0, 0.9, 0.8);
+  // Medium orange in the middle
+  lut.addRGBPoint((minVal + maxVal) * 0.5, 1.0, 0.6, 0.3);
+  // Darker burnt orange near the top
+  lut.addRGBPoint(maxVal, 0.6, 0.25, 0.0);
   return lut;
 }
 
