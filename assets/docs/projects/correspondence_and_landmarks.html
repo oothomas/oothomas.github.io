@@ -102,7 +102,8 @@
     // ----------------------------------------------------------
     console.log("Setting up Color Transfer Function (viridis-like) for mesh1...");
     const lut = vtk.Rendering.Core.vtkColorTransferFunction.newInstance();
-    lut.setColorSpaceToDiverging(); // or "Lab"/"HSV"
+    // Instead of setColorSpaceToDiverging (which is not supported), use:
+    lut.setColorSpaceToRGB(); // or remove this line if the default RGB is acceptable
     // Approx viridis control points:
     lut.addRGBPoint(0.0, 0.267, 0.005, 0.329);
     lut.addRGBPoint(0.33, 0.128, 0.568, 0.551);
@@ -255,7 +256,7 @@
           }
         }
 
-        // optional smoothing pass
+        // Optional smoothing pass
         console.log("Smoothing mesh2 color array...");
         const smoothedColors2 = smoothColorArray(mesh2PolyData, colors2);
 
