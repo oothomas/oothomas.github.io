@@ -8,9 +8,9 @@ Seattle, WA | [LinkedIn](https://www.linkedin.com/in/oshane-o-thomas) | [GitHub]
 
 <div style="display: flex; align-items: center;">
     <img src="assets/images/profile.jpg" alt="Oshane O. Thomas" style="width: 150px; border-radius: 8px; margin-right: 20px;">
-    <div>
-        I am a <strong>computational biologist and machine learning researcher</strong> specializing in <strong>biological shape analysis, AI-powered phenotyping, and functional morphology</strong>.  
-        My expertise bridges <strong>academic research and industry applications</strong>, leveraging deep learning and 3D data processing to <strong>extract meaningful insights from morphological datasets</strong>.  
+    <div style="font-size: 18px;">
+        I am a computational biologist and machine learning researcher specializing in biological shape analysis, AI-powered phenotyping, and functional morphology.  
+        My expertise bridges academic research and industry applications, leveraging deep learning and 3D data processing to extract meaningful insights from morphological datasets.  
     </div>
 </div>
 
@@ -18,15 +18,24 @@ Seattle, WA | [LinkedIn](https://www.linkedin.com/in/oshane-o-thomas) | [GitHub]
 
 ## **🛠️ Expertise & Skills**  
 
-**AI & Computational Morphology:** Deep learning for biological shape analysis, automated landmarking, and morphospace visualization.
+<div style="font-size: 18px;">
 
-**3D Data Processing & Visualization:** Advanced geometric morphometrics, micro-CT data segmentation, functional shape analysis.
+**AI & Computational Morphology:**
+Deep learning for biological shape analysis, automated landmarking, and morphospace visualization.
 
-**Machine Learning & AI:** Transformer-based classification, generative AI, functional map-based shape matching.
+**3D Data Processing & Visualization:**
+Advanced geometric morphometrics, micro-CT data segmentation, functional shape analysis.
 
-**Software Development & Tooling:** Developer of **3D Slicer extensions** and open-source tools for biological and medical imaging research.
+**Machine Learning & AI:**
+Transformer-based classification, generative AI, functional map-based shape matching.
 
-**Interdisciplinary Research & Leadership:** Experience collaborating across **biomechanics, evolutionary biology, and AI** to develop cutting-edge solutions.  
+**Software Development & Tooling:**
+Developer of **3D Slicer extensions** and open-source tools for biological and medical imaging research.
+
+**Interdisciplinary Research & Leadership:**
+Experience collaborating across **biomechanics, evolutionary biology, and AI** to develop cutting-edge solutions.  
+
+</div>
 
 ---
 
@@ -52,7 +61,7 @@ Seattle, WA | [LinkedIn](https://www.linkedin.com/in/oshane-o-thomas) | [GitHub]
 ## **🚀 Featured Work**  
 **Explore my projects, research, and open-source contributions:**  
 <div style="text-align: center; margin-top: 10px;">
-    <a href="projects/" style="
+    <a href="/projects.md" style="
         background-color: #007BFF;
         color: white;
         padding: 12px 20px;
