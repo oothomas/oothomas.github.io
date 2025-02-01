@@ -19,15 +19,16 @@
     }
   </style>
 
-  <!-- 1) Load the vtk.js library first (no defer). -->
-  <script src="https://unpkg.com/vtk.js@39.5.4/dist/vtk.js"></script>
+  <!-- 1) Load vtk.js from unpkg (make sure CORB doesn't block it) -->
+  <script 
+    src="https://unpkg.com/vtk.js@39.5.4/dist/vtk.js"
+    crossorigin="anonymous">
+  </script>
 </head>
 <body>
-  <!-- Two containers for the side-by-side render windows -->
   <div id="view1"></div>
   <div id="view2"></div>
 
-  <!-- 2) Our main script, which now safely references the global `vtk` -->
   <script>
     console.log("==== Starting correspondence_and_landmarks script ====");
 
@@ -50,7 +51,7 @@
     const renderWindow2 = fullScreenRenderWindow2.getRenderWindow();
 
     // ----------------------------------------------------------
-    // 2) Share the camera between both renderers
+    // 2) Share the camera
     // ----------------------------------------------------------
     console.log("Sharing camera...");
     const camera = renderer1.getActiveCamera();
@@ -66,7 +67,7 @@
     renderWindow2.getInteractor().onEndAnimation(updateBoth);
 
     // ----------------------------------------------------------
-    // 3) Orientation Marker (newer API)
+    // 3) Orientation Marker
     // ----------------------------------------------------------
     console.log("Setting up orientation marker...");
     const axesActor = vtk.Rendering.Core.vtkAxesActor.newInstance();
@@ -101,9 +102,8 @@
     // ----------------------------------------------------------
     // 5) Color Transfer Function
     // ----------------------------------------------------------
-    console.log("Setting up Color Transfer Function (viridis-like)...");
+    console.log("Setting up Color Transfer Function...");
     const lut = vtk.Rendering.Core.vtkColorTransferFunction.newInstance();
-    // e.g. lut.setColorSpaceToRGB(); // optional
     lut.addRGBPoint(0.0, 0.267, 0.005, 0.329);
     lut.addRGBPoint(0.33, 0.128, 0.568, 0.551);
     lut.addRGBPoint(0.66, 0.369, 0.788, 0.382);
@@ -174,7 +174,7 @@
     }
 
     // ----------------------------------------------------------
-    // 8) Fetch JSON, parse, create pipeline
+    // 8) Fetch JSON
     // ----------------------------------------------------------
     const urlOfJson = "https://oothomas.github.io/assets/data/output_vtk_data.json";
     console.log("Fetching JSON from:", urlOfJson);
@@ -186,7 +186,6 @@
       })
       .then((data) => {
         console.log("  -> JSON parsed. Keys in data:", Object.keys(data));
-
         const textEnc = new TextEncoder();
         const mesh1AB = textEnc.encode(JSON.stringify(data.mesh1)).buffer;
         const mesh2AB = textEnc.encode(JSON.stringify(data.mesh2)).buffer;
@@ -224,7 +223,7 @@
         for (let i = 0; i < nVerts1; i++) {
           const mapped = vertexMapping[i];
           if (mapped >= 0 && mapped < nVerts2) {
-            const c = lut.getColor(scalars1[i]); // [r,g,b] in [0..1]
+            const c = lut.getColor(scalars1[i]); // [r, g, b] in [0..1]
             colors2[3 * mapped + 0] += c[0];
             colors2[3 * mapped + 1] += c[1];
             colors2[3 * mapped + 2] += c[2];
