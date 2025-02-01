@@ -214,6 +214,13 @@
       border-radius: 5px;
       font-size: 0.95em;
     }
+
+    /* NEW: Force viewers in the Interactive Viewer tab to be side by side */
+    #interactiveTab #mainFlex {
+      flex-wrap: nowrap;
+      width: 1220px; /* 600px (Plotly) + 20px gap + 600px (VTK) */
+      margin: 0 auto;
+    }
   </style>
 </head>
 <body>
