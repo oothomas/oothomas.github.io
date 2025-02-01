@@ -19,15 +19,16 @@
     }
   </style>
 
-  <!-- 1) Load a newer vtk.js version, with "defer" so it loads before our script. -->
-  <script
-    src="https://unpkg.com/vtk.js@39.5.4/dist/vtk.js"
-    type="text/javascript"
-    defer
-  ></script>
+  <!-- 1) Load the vtk.js library first (no defer). -->
+  <script src="https://unpkg.com/vtk.js@39.5.4/dist/vtk.js"></script>
+</head>
+<body>
+  <!-- Two containers for the side-by-side render windows -->
+  <div id="view1"></div>
+  <div id="view2"></div>
 
-  <!-- 2) Our main script, also deferred, runs only after vtk.js is fetched. -->
-  <script type="text/javascript" defer>
+  <!-- 2) Our main script, which now safely references the global `vtk` -->
+  <script>
     console.log("==== Starting correspondence_and_landmarks script ====");
 
     // ----------------------------------------------------------
