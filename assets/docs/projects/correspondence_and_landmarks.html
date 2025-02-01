@@ -102,8 +102,8 @@
     // ----------------------------------------------------------
     console.log("Setting up Color Transfer Function (viridis-like) for mesh1...");
     const lut = vtk.Rendering.Core.vtkColorTransferFunction.newInstance();
-    // Instead of setColorSpaceToDiverging (which is not supported), use:
-    lut.setColorSpaceToRGB(); // or remove this line if the default RGB is acceptable
+    // Removing setColorSpace call since it's not supported.
+    // lut.setColorSpaceToRGB(); // <-- Removed
     // Approx viridis control points:
     lut.addRGBPoint(0.0, 0.267, 0.005, 0.329);
     lut.addRGBPoint(0.33, 0.128, 0.568, 0.551);
@@ -114,7 +114,7 @@
     mapper1.setColorModeToMapScalars();
     mapper1.setScalarModeToUsePointFieldData();
 
-    // For mesh2, we\u2019ll store direct RGB colors, so:
+    // For mesh2, we\u2019ll store direct RGB colors.
     mapper2.setScalarModeToUsePointFieldData();
     mapper2.setColorModeToDirectScalars();
 
@@ -147,7 +147,7 @@
         const nPts = polys[idx++];
         const cellVerts = polys.slice(idx, idx + nPts);
         idx += nPts;
-        // build adjacency
+        // Build adjacency
         for (let a = 0; a < cellVerts.length; a++) {
           for (let b = a + 1; b < cellVerts.length; b++) {
             adjacency[cellVerts[a]].push(cellVerts[b]);
@@ -216,7 +216,7 @@
           scalars1[i] = i / (nVerts1 - 1); // simple 0..1 ramp
         }
 
-        // Store as "Scalars" on mesh1
+        // Attach scalars to mesh1
         console.log("Attaching mesh1_scalars to mesh1...");
         const scalarData1 = vtk.Common.Core.vtkDataArray.newInstance({
           name: 'mesh1_scalars',
@@ -225,7 +225,7 @@
         });
         mesh1PolyData.getPointData().setScalars(scalarData1);
 
-        // (B) Transfer color to mesh2
+        // (B) Transfer color to mesh2 using vertexMapping
         console.log("Transferring color from mesh1 to mesh2 using vertexMapping...");
         const nVerts2 = mesh2PolyData.getPoints().getNumberOfPoints();
         const colors2 = new Float32Array(3 * nVerts2);
@@ -242,7 +242,7 @@
           }
         }
 
-        // Average + default to black if no hits
+        // Average colors and default to black if no contribution
         console.log("Averaging colors in mesh2...");
         for (let v = 0; v < nVerts2; v++) {
           if (counts2[v] > 0) {
@@ -267,14 +267,14 @@
         });
         mesh2PolyData.getPointData().setScalars(colorData2);
 
-        // (C) Hook up the polydata to the mappers, add actors to each renderer
+        // (C) Connect polydata to mappers and add actors
         console.log("Setting mapper inputs & adding actors to scene...");
         mapper1.setInputData(mesh1PolyData);
         mapper2.setInputData(mesh2PolyData);
         renderer1.addActor(actor1);
         renderer2.addActor(actor2);
 
-        // Reset cameras & render
+        // Reset cameras and render
         console.log("Resetting camera & rendering...");
         renderer1.resetCamera();
         renderer2.resetCamera();
