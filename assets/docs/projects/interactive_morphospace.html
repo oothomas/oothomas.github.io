@@ -18,7 +18,8 @@
     }
   </style>
 
-  <!-- Load vtk.js as a single bundled script (UMD). No "dist/esm" or "Sources" needed. -->
+  <!-- Load vtk.js as a single bundled script (UMD). 
+       No "dist/esm" or "Sources" needed. -->
   <script src="https://unpkg.com/vtk.js"></script>
 </head>
 <body>
@@ -27,9 +28,12 @@
   <div id="view2"></div>
 
   <script>
+    console.log("==== Starting correspondence_and_landmarks script ====");
+
     // ----------------------------------------------------------
     // 1) Create two side-by-side render windows
     // ----------------------------------------------------------
+    console.log("Creating side-by-side VTK render windows...");
     const fullScreenRenderWindow1 = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
       rootContainer: document.getElementById('view1'),
       background: [0.2, 0.2, 0.2],
@@ -47,6 +51,7 @@
     // ----------------------------------------------------------
     // 2) Share the camera between both renderers
     // ----------------------------------------------------------
+    console.log("Sharing camera...");
     const camera = renderer1.getActiveCamera();
     renderer2.setActiveCamera(camera);
 
@@ -63,6 +68,7 @@
     // ----------------------------------------------------------
     // 3) Optional orientation marker in view1
     // ----------------------------------------------------------
+    console.log("Setting up orientation marker...");
     const axesActor = vtk.Rendering.Core.vtkAxesActor.newInstance();
     const orientationWidget = vtk.Interaction.Widgets.vtkOrientationMarkerWidget.newInstance({
       actor: axesActor,
@@ -79,6 +85,7 @@
     // ----------------------------------------------------------
     // 4) Create pipeline objects for mesh1 and mesh2
     // ----------------------------------------------------------
+    console.log("Creating pipeline objects (readers, mappers, actors)...");
     const reader1 = vtk.IO.Core.vtkHttpDataSetReader.newInstance({ fetchGzip: true });
     const reader2 = vtk.IO.Core.vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 
@@ -93,6 +100,7 @@
     // ----------------------------------------------------------
     // 5) Create a viridis-like Color Transfer Function for mesh1
     // ----------------------------------------------------------
+    console.log("Setting up Color Transfer Function (viridis-like) for mesh1...");
     const lut = vtk.Rendering.Core.vtkColorTransferFunction.newInstance();
     lut.setColorSpaceToDiverging(); // or "Lab"/"HSV"
     // Approx viridis control points:
@@ -112,6 +120,7 @@
     // ----------------------------------------------------------
     // 6) Scalar bar for mesh1
     // ----------------------------------------------------------
+    console.log("Adding scalar bar for mesh1...");
     const scalarBarActor = vtk.Rendering.Core.vtkScalarBarActor.newInstance();
     scalarBarActor.setScalarsToColors(lut);
     scalarBarActor.setNumberOfLabels(5);
@@ -125,7 +134,9 @@
     // ----------------------------------------------------------
     // 7) Smoothing function to reduce discrete color steps in mesh2
     // ----------------------------------------------------------
+    console.log("Defining smoothing function for mesh2 color array...");
     function smoothColorArray(polyData, colorArray) {
+      console.log("  -> smoothColorArray() called");
       const polys = polyData.getPolys().getData();
       const nPoints = polyData.getPoints().getNumberOfPoints();
 
@@ -159,29 +170,45 @@
         newColor[3 * v + 1] = g / count;
         newColor[3 * v + 2] = b / count;
       }
+      console.log("  -> smoothColorArray() complete");
       return newColor;
     }
 
     // ----------------------------------------------------------
     // 8) Load JSON data: mesh1, mesh2, T12
     // ----------------------------------------------------------
-    //  -> Adjust this URL to your actual JSON file location
+    // Use your actual JSON file URL (which is publicly accessible)
     const urlOfJson = 'https://oothomas.github.io/assets/data/output_vtk_data.json';
 
+    console.log("Fetching JSON from:", urlOfJson);
     fetch(urlOfJson)
-      .then((response) => response.json())
+      .then((response) => {
+        console.log("  -> JSON fetch status:", response.status, response.statusText);
+        return response.json();
+      })
       .then((data) => {
+        console.log("  -> JSON successfully parsed. Keys in data:", Object.keys(data));
+
         // data: { mesh1: {...}, mesh2: {...}, vertexMapping: [...] }
         // Convert each mesh object into vtk.js polydata
+        console.log("Parsing mesh1 and mesh2...");
         const txtEncoder = new TextEncoder();
-        reader1.parseAsArrayBuffer(txtEncoder.encode(JSON.stringify(data.mesh1)).buffer);
-        reader2.parseAsArrayBuffer(txtEncoder.encode(JSON.stringify(data.mesh2)).buffer);
+        const mesh1DataAB = txtEncoder.encode(JSON.stringify(data.mesh1)).buffer;
+        const mesh2DataAB = txtEncoder.encode(JSON.stringify(data.mesh2)).buffer;
+
+        reader1.parseAsArrayBuffer(mesh1DataAB);
+        reader2.parseAsArrayBuffer(mesh2DataAB);
 
         const mesh1PolyData = reader1.getOutputData();
         const mesh2PolyData = reader2.getOutputData();
+        console.log("  -> mesh1PolyData points:", mesh1PolyData.getPoints().getNumberOfPoints());
+        console.log("  -> mesh2PolyData points:", mesh2PolyData.getPoints().getNumberOfPoints());
+
         const vertexMapping = data.vertexMapping;
+        console.log("  -> vertexMapping length:", vertexMapping.length);
 
         // (A) Assign scalar array to mesh1
+        console.log("Building scalar array for mesh1...");
         const nVerts1 = mesh1PolyData.getPoints().getNumberOfPoints();
         const scalars1 = new Float32Array(nVerts1);
         for (let i = 0; i < nVerts1; i++) {
@@ -189,6 +216,7 @@
         }
 
         // Store as "Scalars" on mesh1
+        console.log("Attaching mesh1_scalars to mesh1...");
         const scalarData1 = vtk.Common.Core.vtkDataArray.newInstance({
           name: 'mesh1_scalars',
           values: scalars1,
@@ -197,6 +225,7 @@
         mesh1PolyData.getPointData().setScalars(scalarData1);
 
         // (B) Transfer color to mesh2
+        console.log("Transferring color from mesh1 to mesh2 using vertexMapping...");
         const nVerts2 = mesh2PolyData.getPoints().getNumberOfPoints();
         const colors2 = new Float32Array(3 * nVerts2);
         const counts2 = new Uint32Array(nVerts2);
@@ -204,7 +233,6 @@
         for (let i = 0; i < nVerts1; i++) {
           const mapped = vertexMapping[i];
           if (mapped >= 0 && mapped < nVerts2) {
-            // Evaluate LUT
             const c = lut.getColor(scalars1[i]); // [r, g, b] in [0..1]
             colors2[3 * mapped + 0] += c[0];
             colors2[3 * mapped + 1] += c[1];
@@ -214,6 +242,7 @@
         }
 
         // Average + default to black if no hits
+        console.log("Averaging colors in mesh2...");
         for (let v = 0; v < nVerts2; v++) {
           if (counts2[v] > 0) {
             colors2[3 * v + 0] /= counts2[v];
@@ -227,6 +256,7 @@
         }
 
         // optional smoothing pass
+        console.log("Smoothing mesh2 color array...");
         const smoothedColors2 = smoothColorArray(mesh2PolyData, colors2);
 
         const colorData2 = vtk.Common.Core.vtkDataArray.newInstance({
@@ -237,18 +267,23 @@
         mesh2PolyData.getPointData().setScalars(colorData2);
 
         // (C) Hook up the polydata to the mappers, add actors to each renderer
+        console.log("Setting mapper inputs & adding actors to scene...");
         mapper1.setInputData(mesh1PolyData);
         mapper2.setInputData(mesh2PolyData);
         renderer1.addActor(actor1);
         renderer2.addActor(actor2);
 
         // Reset cameras & render
+        console.log("Resetting camera & rendering...");
         renderer1.resetCamera();
         renderer2.resetCamera();
         renderWindow1.render();
         renderWindow2.render();
+        console.log("==== Done! ====");
       })
-      .catch((err) => console.error('Failed to load JSON:', err));
+      .catch((err) => {
+        console.error('Failed to load JSON:', err);
+      });
   </script>
 </body>
 </html>
