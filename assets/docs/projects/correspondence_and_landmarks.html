@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Mesh Correspondence and Landmarks (Latest vtk.js)</title>
+  <title>Mesh Correspondence and Landmarks (Newer vtk.js)</title>
+  
   <style>
     body {
       margin: 0;
@@ -18,15 +19,15 @@
     }
   </style>
 
-  <!-- Load a newer vtk.js UMD bundle (version 39.5.4). -->
-  <script src="https://unpkg.com/vtk.js@39.5.4/dist/vtk.js"></script>
-</head>
-<body>
-  <!-- Two side-by-side containers -->
-  <div id="view1"></div>
-  <div id="view2"></div>
+  <!-- 1) Load a newer vtk.js version, with "defer" so it loads before our script. -->
+  <script
+    src="https://unpkg.com/vtk.js@39.5.4/dist/vtk.js"
+    type="text/javascript"
+    defer
+  ></script>
 
-  <script>
+  <!-- 2) Our main script, also deferred, runs only after vtk.js is fetched. -->
+  <script type="text/javascript" defer>
     console.log("==== Starting correspondence_and_landmarks script ====");
 
     // ----------------------------------------------------------
@@ -54,7 +55,6 @@
     const camera = renderer1.getActiveCamera();
     renderer2.setActiveCamera(camera);
 
-    // Sync re-renders
     const updateBoth = () => {
       renderWindow1.render();
       renderWindow2.render();
@@ -65,7 +65,7 @@
     renderWindow2.getInteractor().onEndAnimation(updateBoth);
 
     // ----------------------------------------------------------
-    // 3) Orientation Marker using newer API
+    // 3) Orientation Marker (newer API)
     // ----------------------------------------------------------
     console.log("Setting up orientation marker...");
     const axesActor = vtk.Rendering.Core.vtkAxesActor.newInstance();
@@ -83,7 +83,7 @@
     orientationWidget.setEnabled(true);
 
     // ----------------------------------------------------------
-    // 4) Create pipeline objects (readers, mappers, actors)
+    // 4) Create pipeline objects
     // ----------------------------------------------------------
     console.log("Creating pipeline objects...");
     const reader1 = vtk.IO.Core.vtkHttpDataSetReader.newInstance();
@@ -98,12 +98,11 @@
     actor2.setMapper(mapper2);
 
     // ----------------------------------------------------------
-    // 5) Color Transfer Function (Viridis-like)
+    // 5) Color Transfer Function
     // ----------------------------------------------------------
     console.log("Setting up Color Transfer Function (viridis-like)...");
     const lut = vtk.Rendering.Core.vtkColorTransferFunction.newInstance();
-    // You can set color space if you want:
-    //   lut.setColorSpaceToRGB(); // or Diverging, HSV, etc.
+    // e.g. lut.setColorSpaceToRGB(); // optional
     lut.addRGBPoint(0.0, 0.267, 0.005, 0.329);
     lut.addRGBPoint(0.33, 0.128, 0.568, 0.551);
     lut.addRGBPoint(0.66, 0.369, 0.788, 0.382);
@@ -113,31 +112,26 @@
     mapper1.setColorModeToMapScalars();
     mapper1.setScalarModeToUsePointFieldData();
 
-    // For mesh2, we treat data as direct RGB colors
     mapper2.setScalarModeToUsePointFieldData();
     mapper2.setColorModeToDirectScalars();
 
     // ----------------------------------------------------------
-    // 6) Scalar bar (modern methods)
+    // 6) Scalar bar
     // ----------------------------------------------------------
     console.log("Adding scalar bar for mesh1...");
     const scalarBarActor = vtk.Rendering.Core.vtkScalarBarActor.newInstance();
-    // Modern method: link the LUT
     scalarBarActor.setScalarsToColors(lut);
-    // Add some labels, title, etc.
     scalarBarActor.setNumberOfLabels(5);
     scalarBarActor.setTitle('Mesh Scalar');
 
-    // Position the scalar bar in normalized viewport coords (optional)
-    scalarBarActor.setPosition(0.85, 0.05); // near bottom-right
+    scalarBarActor.setPosition(0.85, 0.05);
     scalarBarActor.setWidth(0.1);
     scalarBarActor.setHeight(0.4);
 
-    // Add to the renderer (this is typically a 2D actor, so "addActor" may also be "addActor2D" in older code)
     renderer1.addActor(scalarBarActor);
 
     // ----------------------------------------------------------
-    // 7) Smoothing helper function for mesh2 color
+    // 7) Smoothing function for mesh2 color
     // ----------------------------------------------------------
     console.log("Defining smoothing function for mesh2 color array...");
     function smoothColorArray(polyData, colorArray) {
@@ -145,7 +139,6 @@
       const polys = polyData.getPolys().getData();
       const nPoints = polyData.getPoints().getNumberOfPoints();
 
-      // Build adjacency
       const adjacency = new Array(nPoints).fill(null).map(() => []);
       let idx = 0;
       while (idx < polys.length) {
@@ -160,19 +153,18 @@
         }
       }
 
-      // Average color among neighbors
       const newColor = new Float32Array(colorArray.length);
       for (let v = 0; v < nPoints; v++) {
         const neighbors = adjacency[v];
-        neighbors.push(v); // include self
+        neighbors.push(v);
         let r = 0, g = 0, b = 0;
         for (const nb of neighbors) {
-          r += colorArray[3 * nb];
+          r += colorArray[3 * nb + 0];
           g += colorArray[3 * nb + 1];
           b += colorArray[3 * nb + 2];
         }
         const count = neighbors.length;
-        newColor[3 * v] = r / count;
+        newColor[3 * v + 0] = r / count;
         newColor[3 * v + 1] = g / count;
         newColor[3 * v + 2] = b / count;
       }
@@ -181,7 +173,7 @@
     }
 
     // ----------------------------------------------------------
-    // 8) Fetch JSON, parse, and build the scene
+    // 8) Fetch JSON, parse, create pipeline
     // ----------------------------------------------------------
     const urlOfJson = "https://oothomas.github.io/assets/data/output_vtk_data.json";
     console.log("Fetching JSON from:", urlOfJson);
@@ -193,10 +185,7 @@
       })
       .then((data) => {
         console.log("  -> JSON parsed. Keys in data:", Object.keys(data));
-        // data: { mesh1: { ... }, mesh2: { ... }, vertexMapping: [...] }
 
-        // Convert each mesh to vtk.js PolyData
-        console.log("Parsing mesh1 and mesh2...");
         const textEnc = new TextEncoder();
         const mesh1AB = textEnc.encode(JSON.stringify(data.mesh1)).buffer;
         const mesh2AB = textEnc.encode(JSON.stringify(data.mesh2)).buffer;
@@ -206,13 +195,14 @@
 
         const mesh1PolyData = reader1.getOutputData();
         const mesh2PolyData = reader2.getOutputData();
+
         console.log("  -> mesh1 vertices:", mesh1PolyData.getPoints().getNumberOfPoints());
         console.log("  -> mesh2 vertices:", mesh2PolyData.getPoints().getNumberOfPoints());
 
         const vertexMapping = data.vertexMapping;
         console.log("  -> vertexMapping length:", vertexMapping.length);
 
-        // (A) Create a simple scalar array [0..1] for mesh1
+        // (A) mesh1 scalar array
         const nVerts1 = mesh1PolyData.getPoints().getNumberOfPoints();
         const scalars1 = new Float32Array(nVerts1);
         for (let i = 0; i < nVerts1; i++) {
@@ -233,53 +223,50 @@
         for (let i = 0; i < nVerts1; i++) {
           const mapped = vertexMapping[i];
           if (mapped >= 0 && mapped < nVerts2) {
-            // Evaluate LUT
             const c = lut.getColor(scalars1[i]); // [r,g,b] in [0..1]
-            colors2[3 * mapped] += c[0];
+            colors2[3 * mapped + 0] += c[0];
             colors2[3 * mapped + 1] += c[1];
             colors2[3 * mapped + 2] += c[2];
             counts2[mapped]++;
           }
         }
-        // Average + default black
+
+        // average + black defaults
         for (let v = 0; v < nVerts2; v++) {
           if (counts2[v] > 0) {
-            colors2[3 * v] /= counts2[v];
+            colors2[3 * v + 0] /= counts2[v];
             colors2[3 * v + 1] /= counts2[v];
             colors2[3 * v + 2] /= counts2[v];
-          } else {
-            colors2[3 * v] = 0;
-            colors2[3 * v + 1] = 0;
-            colors2[3 * v + 2] = 0;
           }
         }
 
-        // Optional smoothing
         console.log("Smoothing mesh2 color array...");
-        const smoothedColors2 = smoothColorArray(mesh2PolyData, colors2);
+        const smoothed2 = smoothColorArray(mesh2PolyData, colors2);
         const colorData2 = vtk.Common.Core.vtkDataArray.newInstance({
           name: 'mesh2_colors',
-          values: smoothedColors2,
+          values: smoothed2,
           numberOfComponents: 3,
         });
         mesh2PolyData.getPointData().setScalars(colorData2);
 
-        // Hook up pipeline
+        // Hook up to the scene
         mapper1.setInputData(mesh1PolyData);
         mapper2.setInputData(mesh2PolyData);
 
         renderer1.addActor(actor1);
         renderer2.addActor(actor2);
 
-        // Reset camera and render
         console.log("Resetting camera & rendering...");
         renderer1.resetCamera();
         renderer2.resetCamera();
         renderWindow1.render();
         renderWindow2.render();
+
         console.log("==== Done! ====");
       })
-      .catch((err) => console.error("Failed to load JSON:", err));
+      .catch((err) => {
+        console.error("Failed to load JSON:", err);
+      });
   </script>
 </body>
 </html>
