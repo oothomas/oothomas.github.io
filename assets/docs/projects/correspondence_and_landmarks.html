@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mesh Correspondence and Landmarks</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: row;
+      /* Keep them side-by-side. Adjust or customize as needed */
+    }
+    #view1, #view2 {
+      width: 50%;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+  </style>
+  <!-- Load vtk.js from a CDN -->
+  <script src="https://unpkg.com/vtk.js"></script>
+</head>
+<body>
+  <!-- Two containers for side-by-side rendering -->
+  <div id="view1"></div>
+  <div id="view2"></div>
+
+  <script type="module">
+    // ----------------------------------------------------------------------------
+    // 1) Import relevant vtk.js modules
+    // ----------------------------------------------------------------------------
+    import 'https://unpkg.com/vtk.js/Sources/Rendering/Profiles/All.js';
+    import vtkHttpDataSetReader from 'https://unpkg.com/vtk.js/Sources/IO/Core/HttpDataSetReader.js';
+    import vtkFullScreenRenderWindow from 'https://unpkg.com/vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow.js';
+    import vtkMapper from 'https://unpkg.com/vtk.js/Sources/Rendering/Core/Mapper.js';
+    import vtkActor from 'https://unpkg.com/vtk.js/Sources/Rendering/Core/Actor.js';
+    import vtkColorTransferFunction from 'https://unpkg.com/vtk.js/Sources/Rendering/Core/ColorTransferFunction.js';
+    import vtkScalarBarActor from 'https://unpkg.com/vtk.js/Sources/Rendering/Core/ScalarBarActor.js';
+    import vtkOrientationMarkerWidget from 'https://unpkg.com/vtk.js/Sources/Interaction/Widgets/OrientationMarkerWidget.js';
+    import vtkAxesActor from 'https://unpkg.com/vtk.js/Sources/Rendering/Core/AxesActor.js';
+    import vtkDataArray from 'https://unpkg.com/vtk.js/Sources/Common/Core/DataArray.js';
+
+    // ----------------------------------------------------------------------------
+    // 2) Create two side-by-side views
+    // ----------------------------------------------------------------------------
+
+    // We'll manually specify the containers.
+    const fullScreenRenderWindow1 = vtkFullScreenRenderWindow.newInstance({
+      rootContainer: document.getElementById('view1'),
+      background: [0.2, 0.2, 0.2],
+    });
+    const renderer1 = fullScreenRenderWindow1.getRenderer();
+    const renderWindow1 = fullScreenRenderWindow1.getRenderWindow();
+
+    const fullScreenRenderWindow2 = vtkFullScreenRenderWindow.newInstance({
+      rootContainer: document.getElementById('view2'),
+      background: [0.2, 0.2, 0.2],
+    });
+    const renderer2 = fullScreenRenderWindow2.getRenderer();
+    const renderWindow2 = fullScreenRenderWindow2.getRenderWindow();
+
+    // ----------------------------------------------------------------------------
+    // 3) Share the same camera
+    // ----------------------------------------------------------------------------
+    const camera = renderer1.getActiveCamera();
+    renderer2.setActiveCamera(camera);
+
+    // Ensure interactions in either window cause both windows to re-render
+    const updateBoth = () => {
+      renderWindow1.render();
+      renderWindow2.render();
+    };
+    renderWindow1.getInteractor().onAnimation(updateBoth);
+    renderWindow1.getInteractor().onEndAnimation(updateBoth);
+    renderWindow2.getInteractor().onAnimation(updateBoth);
+    renderWindow2.getInteractor().onEndAnimation(updateBoth);
+
+    // ----------------------------------------------------------------------------
+    // 4) Optional orientation axes in the first view
+    // ----------------------------------------------------------------------------
+    const axes = vtkAxesActor.newInstance();
+    const orientationWidget = vtkOrientationMarkerWidget.newInstance({
+      actor: axes,
+      interactor: renderWindow1.getInteractor(),
+    });
+    orientationWidget.setEnabled(true);
+    orientationWidget.setViewportCorner(
+      vtkOrientationMarkerWidget.Corners.BOTTOM_LEFT
+    );
+    orientationWidget.setViewportSize(0.15);
+    orientationWidget.setMinPixelSize(100);
+    orientationWidget.setMaxPixelSize(300);
+
+    // ----------------------------------------------------------------------------
+    // 5) Create pipeline objects for mesh1 and mesh2
+    // ----------------------------------------------------------------------------
+    const reader1 = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
+    const reader2 = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
+
+    const mapper1 = vtkMapper.newInstance();
+    const actor1 = vtkActor.newInstance();
+    actor1.setMapper(mapper1);
+
+    const mapper2 = vtkMapper.newInstance();
+    const actor2 = vtkActor.newInstance();
+    actor2.setMapper(mapper2);
+
+    // ----------------------------------------------------------------------------
+    // 6) Create a Color Transfer Function (viridis-like)
+    // ----------------------------------------------------------------------------
+    // We'll define a few control points in [0..1].
+    const lut = vtkColorTransferFunction.newInstance();
+    // "viridis" approximate:
+    lut.setColorSpaceToDiverging(); // or "Lab"/"HSV" if you prefer
+    lut.addRGBPoint(0.0, 0.267, 0.005, 0.329); // #440154
+    lut.addRGBPoint(0.33, 0.128, 0.568, 0.551); 
+    lut.addRGBPoint(0.66, 0.369, 0.788, 0.382); 
+    lut.addRGBPoint(1.0, 0.993, 0.906, 0.144); // #FDE725
+
+    // Map scalars => LUT
+    mapper1.setLookupTable(lut);
+    mapper1.setColorModeToMapScalars();
+    mapper1.setScalarModeToUsePointFieldData();
+
+    // For mesh2, we might store direct (R, G, B) colors after applying an average. So:
+    mapper2.setScalarModeToUsePointFieldData();
+    mapper2.setColorModeToDirectScalars(); // treat 3-component array as RGB
+
+    // ----------------------------------------------------------------------------
+    // 7) Create a scalar bar actor for the first view
+    // ----------------------------------------------------------------------------
+    const scalarBarActor = vtkScalarBarActor.newInstance();
+    scalarBarActor.setScalarsToColors(lut);
+    scalarBarActor.setNumberOfLabels(5);
+    scalarBarActor.setTitle("Mesh Scalar");
+    // Position in normalized viewport coordinates
+    scalarBarActor.setPosition(0.85, 0.05); // near bottom-right
+    scalarBarActor.setWidth(0.1);
+    scalarBarActor.setHeight(0.4);
+
+    // Add to renderer1
+    renderer1.addActor(scalarBarActor);
+
+    // ----------------------------------------------------------------------------
+    // 8) Naive one-step smoothing of color array in mesh2
+    // ----------------------------------------------------------------------------
+    function smoothColorArray(polyData, colorArray) {
+      const polys = polyData.getPolys().getData();
+      const nPoints = polyData.getPoints().getNumberOfPoints();
+
+      // Build adjacency list
+      const adjacency = new Array(nPoints);
+      for (let i = 0; i < nPoints; i++) {
+        adjacency[i] = [];
+      }
+
+      let idx = 0;
+      while (idx < polys.length) {
+        const nPts = polys[idx++];
+        const cellVerts = polys.slice(idx, idx + nPts);
+        idx += nPts;
+        for (let a = 0; a < cellVerts.length; a++) {
+          for (let b = a + 1; b < cellVerts.length; b++) {
+            const vA = cellVerts[a];
+            const vB = cellVerts[b];
+            adjacency[vA].push(vB);
+            adjacency[vB].push(vA);
+          }
+        }
+      }
+
+      const newColor = new Float32Array(colorArray.length);
+      for (let v = 0; v < nPoints; v++) {
+        const neighbors = adjacency[v];
+        // include self
+        neighbors.push(v);
+
+        let r = 0, g = 0, b = 0;
+        for (const nb of neighbors) {
+          r += colorArray[3 * nb + 0];
+          g += colorArray[3 * nb + 1];
+          b += colorArray[3 * nb + 2];
+        }
+        const count = neighbors.length;
+        newColor[3 * v + 0] = r / count;
+        newColor[3 * v + 1] = g / count;
+        newColor[3 * v + 2] = b / count;
+      }
+      return newColor;
+    }
+
+    // ----------------------------------------------------------------------------
+    // 9) Load JSON, parse, and build color arrays
+    // ----------------------------------------------------------------------------
+    const urlOfJson = 'https://oothomas.github.io/assets/data/output_vtk_data.json'; // <-- Replace with your URL
+
+    fetch(urlOfJson)
+      .then((response) => response.json())
+      .then((data) => {
+        // data: { mesh1: { ... }, mesh2: { ... }, vertexMapping: [] }
+
+        // Parse the mesh objects into vtk.js
+        reader1.parseAsArrayBuffer(
+          new TextEncoder().encode(JSON.stringify(data.mesh1)).buffer
+        );
+        reader2.parseAsArrayBuffer(
+          new TextEncoder().encode(JSON.stringify(data.mesh2)).buffer
+        );
+
+        const mesh1PolyData = reader1.getOutputData();
+        const mesh2PolyData = reader2.getOutputData();
+        const vertexMapping = data.vertexMapping;
+
+        // (A) Generate a simple scalar for mesh1
+        const nVerts1 = mesh1PolyData.getPoints().getNumberOfPoints();
+        const scalars1 = new Float32Array(nVerts1);
+        for (let i = 0; i < nVerts1; i++) {
+          scalars1[i] = i / (nVerts1 - 1); // from 0..1
+        }
+
+        // Attach as "Scalars" to mesh1
+        mesh1PolyData.getPointData().setScalars(
+          vtkDataArray.newInstance({
+            name: 'mesh1_scalars',
+            values: scalars1,
+            numberOfComponents: 1,
+          })
+        );
+
+        // (B) Transfer color to mesh2
+        const nVerts2 = mesh2PolyData.getPoints().getNumberOfPoints();
+        const colors2 = new Float32Array(3 * nVerts2);
+        const counts2 = new Uint32Array(nVerts2);
+
+        for (let i = 0; i < nVerts1; i++) {
+          const mappedV = vertexMapping[i];
+          if (mappedV >= 0 && mappedV < nVerts2) {
+            // Evaluate LUT at scalars1[i]
+            const c = lut.getColor(scalars1[i]);
+            colors2[3 * mappedV + 0] += c[0];
+            colors2[3 * mappedV + 1] += c[1];
+            colors2[3 * mappedV + 2] += c[2];
+            counts2[mappedV] += 1;
+          }
+        }
+
+        for (let v = 0; v < nVerts2; v++) {
+          if (counts2[v] > 0) {
+            colors2[3 * v + 0] /= counts2[v];
+            colors2[3 * v + 1] /= counts2[v];
+            colors2[3 * v + 2] /= counts2[v];
+          } else {
+            // No direct mapping => default to black
+            colors2[3 * v + 0] = 0.0;
+            colors2[3 * v + 1] = 0.0;
+            colors2[3 * v + 2] = 0.0;
+          }
+        }
+
+        // Optional smoothing
+        const smoothedColors2 = smoothColorArray(mesh2PolyData, colors2);
+
+        mesh2PolyData.getPointData().setScalars(
+          vtkDataArray.newInstance({
+            name: 'mesh2_colors',
+            values: smoothedColors2,
+            numberOfComponents: 3,
+          })
+        );
+
+        // (C) Connect polydata to mappers and add to scene
+        mapper1.setInputData(mesh1PolyData);
+        mapper2.setInputData(mesh2PolyData);
+
+        renderer1.addActor(actor1);
+        renderer2.addActor(actor2);
+
+        // (D) Reset camera
+        renderer1.resetCamera();
+        renderer2.resetCamera();
+        renderWindow1.render();
+        renderWindow2.render();
+      })
+      .catch((err) => console.error('Failed to load JSON: ', err));
+  </script>
+</body>
+</html>
