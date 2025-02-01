@@ -18,7 +18,7 @@
     }
   </style>
 
-  <!-- Load the SINGLE bundled vtk.js script in UMD format -->
+  <!-- Load vtk.js as a single bundled script (UMD). No "dist/esm" or "Sources" needed. -->
   <script src="https://unpkg.com/vtk.js"></script>
 </head>
 <body>
@@ -63,9 +63,9 @@
     // ----------------------------------------------------------
     // 3) Optional orientation marker in view1
     // ----------------------------------------------------------
-    const axes = vtk.Rendering.Core.vtkAxesActor.newInstance();
+    const axesActor = vtk.Rendering.Core.vtkAxesActor.newInstance();
     const orientationWidget = vtk.Interaction.Widgets.vtkOrientationMarkerWidget.newInstance({
-      actor: axes,
+      actor: axesActor,
       interactor: renderWindow1.getInteractor(),
     });
     orientationWidget.setEnabled(true);
@@ -116,7 +116,7 @@
     scalarBarActor.setScalarsToColors(lut);
     scalarBarActor.setNumberOfLabels(5);
     scalarBarActor.setTitle('Mesh Scalar');
-    // position in normalized viewport coordinates
+    // Position in normalized viewport coordinates
     scalarBarActor.setPosition(0.85, 0.05);
     scalarBarActor.setWidth(0.1);
     scalarBarActor.setHeight(0.4);
@@ -165,13 +165,14 @@
     // ----------------------------------------------------------
     // 8) Load JSON data: mesh1, mesh2, T12
     // ----------------------------------------------------------
-    const urlOfJson = 'https://oothomas.github.io/assets/data/output_vtk_data.json'; // CHANGE ME
+    //  -> Adjust this URL to your actual JSON file location
+    const urlOfJson = 'https://oothomas.github.io/assets/data/output_vtk_data.json';
 
     fetch(urlOfJson)
       .then((response) => response.json())
       .then((data) => {
         // data: { mesh1: {...}, mesh2: {...}, vertexMapping: [...] }
-        // Parse into vtk.js
+        // Convert each mesh object into vtk.js polydata
         const txtEncoder = new TextEncoder();
         reader1.parseAsArrayBuffer(txtEncoder.encode(JSON.stringify(data.mesh1)).buffer);
         reader2.parseAsArrayBuffer(txtEncoder.encode(JSON.stringify(data.mesh2)).buffer);
@@ -203,7 +204,8 @@
         for (let i = 0; i < nVerts1; i++) {
           const mapped = vertexMapping[i];
           if (mapped >= 0 && mapped < nVerts2) {
-            const c = lut.getColor(scalars1[i]);
+            // Evaluate LUT
+            const c = lut.getColor(scalars1[i]); // [r, g, b] in [0..1]
             colors2[3 * mapped + 0] += c[0];
             colors2[3 * mapped + 1] += c[1];
             colors2[3 * mapped + 2] += c[2];
@@ -211,20 +213,20 @@
           }
         }
 
+        // Average + default to black if no hits
         for (let v = 0; v < nVerts2; v++) {
           if (counts2[v] > 0) {
             colors2[3 * v + 0] /= counts2[v];
             colors2[3 * v + 1] /= counts2[v];
             colors2[3 * v + 2] /= counts2[v];
           } else {
-            // no direct mapping => black
             colors2[3 * v + 0] = 0.0;
             colors2[3 * v + 1] = 0.0;
             colors2[3 * v + 2] = 0.0;
           }
         }
 
-        // optional smoothing
+        // optional smoothing pass
         const smoothedColors2 = smoothColorArray(mesh2PolyData, colors2);
 
         const colorData2 = vtk.Common.Core.vtkDataArray.newInstance({
@@ -234,14 +236,13 @@
         });
         mesh2PolyData.getPointData().setScalars(colorData2);
 
-        // (C) Connect to mappers, add actors
+        // (C) Hook up the polydata to the mappers, add actors to each renderer
         mapper1.setInputData(mesh1PolyData);
         mapper2.setInputData(mesh2PolyData);
-
         renderer1.addActor(actor1);
         renderer2.addActor(actor2);
 
-        // reset cameras
+        // Reset cameras & render
         renderer1.resetCamera();
         renderer2.resetCamera();
         renderWindow1.render();
