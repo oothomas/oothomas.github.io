@@ -20,20 +20,15 @@ Seattle, WA | [LinkedIn](https://www.linkedin.com/in/oshane-o-thomas) | [GitHub]
 
 <div style="font-size: 18px;">
 
-**AI & Computational Morphology:**
-Deep learning for biological shape analysis, automated landmarking, and morphospace visualization.
+**AI & Computational Morphology:** Deep learning for biological shape analysis, automated landmarking, and morphospace visualization.
 
-**3D Data Processing & Visualization:**
-Advanced geometric morphometrics, micro-CT data segmentation, functional shape analysis.
+**3D Data Processing & Visualization:** Advanced geometric morphometrics, micro-CT data segmentation, functional shape analysis.
 
-**Machine Learning & AI:**
-Transformer-based classification, generative AI, functional map-based shape matching.
+**Machine Learning & AI:** Transformer-based classification, generative AI, functional map-based shape matching.
 
-**Software Development & Tooling:**
-Developer of **3D Slicer extensions** and open-source tools for biological and medical imaging research.
+**Software Development & Tooling:** Developer of **3D Slicer extensions** and open-source tools for biological and medical imaging research.
 
-**Interdisciplinary Research & Leadership:**
-Experience collaborating across **biomechanics, evolutionary biology, and AI** to develop cutting-edge solutions.  
+**Interdisciplinary Research & Leadership:** Experience collaborating across **biomechanics, evolutionary biology, and AI** to develop cutting-edge solutions.  
 
 </div>
 
