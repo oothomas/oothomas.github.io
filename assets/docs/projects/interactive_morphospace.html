@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Morphospace Visualization Tool (No Built-in Interaction)</title>
+  <title>Morphospace Visualization Tool</title>
 
   <!-- 1) Plotly for 2D scatter plot -->
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -23,9 +23,12 @@
       text-align: center; /* center the main title */
     }
 
-    /* Because you want a uniform width for tabs and instructions: */
+    /*
+      Increase #mainContainer to 1200px so two ~600px blocks
+      can fit side by side more comfortably.
+    */
     #mainContainer {
-      max-width: 900px;
+      max-width: 1200px;
       margin: 0 auto; /* center everything */
     }
 
@@ -36,38 +39,53 @@
       margin-right: 10px;
     }
 
-    /* The main flex container: Plotly (left), VTK (right) */
+    /*
+      The main flex container: side by side with wrap allowed.
+      gap: 20px for spacing; margin-bottom for spacing below.
+    */
     #mainFlex {
       display: flex;
       flex-wrap: wrap;
       gap: 20px;
       margin-bottom: 1em;
     }
+
+    /*
+      Each viewer: by default about half the container width,
+      minus half the gap (10px) so two items + 20px gap fit well.
+      min-width:0 is important so flex can shrink properly.
+    */
     .flexItem {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
+      flex: 1 1 calc(50% - 10px);
+      box-sizing: border-box;
+      min-width: 0;
     }
 
-    /* Plotly container - 600px wide, side by side with the VTK container */
+    /*
+      Plotly container: width/height auto, fill flex item’s space.
+      Additional border/padding remain as desired.
+    */
     #plotlyDiv {
-      width: 600px;
+      width: 100%;
       height: 480px;
       border: 1px solid #ccc;
       background: #fff;
       position: relative;
-      margin-bottom: 1em;
+      /* margin-bottom: 1em;  (optional to remove if you like a tighter layout) */
     }
 
-    /* Range slider for stepping through shapes */
+    /*
+      The slider now spans both columns because it’s placed
+      below the flex container.
+    */
     #variantSlider {
-      width: 600px;
+      width: 100%;
       margin: 10px 0 20px 0;
     }
 
-    /* VTK container, also 600px wide for alignment */
+    /* VTK container: same approach, fill the flex item’s width. */
     #vtkContainer {
-      width: 600px;
+      width: 100%;
       height: 480px;
       border: 1px solid #ccc;
       background-color: #EFEFEF;
@@ -107,10 +125,10 @@
       border: 2px solid #444;
     }
 
-    /* Instructions section - match 900px, center */
+    /* Instructions section */
     #instructions {
-      max-width: 900px;
-      margin: 2em auto; /* center */
+      max-width: 1200px;
+      margin: 2em auto;
       background: #ffffff;
       padding: 1em;
       border: 1px solid #ccc;
@@ -144,7 +162,7 @@
       border-radius: 5px;
       margin-bottom: 1em;
       margin: 0 auto; /* center horizontally */
-      max-width: 900px;
+      max-width: 1200px;
     }
     .tabContent.active {
       display: block;
@@ -204,7 +222,7 @@
       cursor: pointer;
     }
 
-    /* contextual info box */
+    /* Contextual info box */
     #contextualInfo {
       max-width: 600px;
       margin-bottom: 1em;
@@ -215,11 +233,14 @@
       font-size: 0.95em;
     }
 
-    /* NEW: Force viewers in the Interactive Viewer tab to be side by side */
-    #interactiveTab #mainFlex {
-      flex-wrap: nowrap;
-      width: 1220px; /* 600px (Plotly) + 20px gap + 600px (VTK) */
-      margin: 0 auto;
+    /*
+      Responsive stacking: when screen < 900px,
+      each flexItem becomes 100% wide, so they stack.
+    */
+    @media (max-width: 900px) {
+      .flexItem {
+        flex: 1 1 100%;
+      }
     }
   </style>
 </head>
@@ -227,7 +248,7 @@
 
 <h1>DISCOae Morphospace Visualization Tool</h1>
 
-<div id="mainContainer"><!-- ADDED / NEW => to unify widths -->
+<div id="mainContainer"><!-- container with max-width:1200px -->
 
   <!-- Tab link container -->
   <div class="tabLinksContainer">
@@ -261,15 +282,18 @@
       <div id="spinnerText">Loading...</div>
     </div>
 
+    <!-- Main flex container for side-by-side viewers -->
     <div id="mainFlex">
       <div class="flexItem">
         <div id="plotlyDiv"></div>
-        <input type="range" id="variantSlider" min="0" max="0" value="0" step="1" />
       </div>
       <div class="flexItem">
         <div id="vtkContainer"></div>
       </div>
     </div>
+
+    <!-- The slider spanning both columns -->
+    <input type="range" id="variantSlider" min="0" max="0" value="0" step="1" />
 
     <!-- Contextual Info for PC descriptions -->
     <div id="contextualInfo">
@@ -299,7 +323,6 @@
       bridging the gap between classic landmark-based approaches and dense surface-based methods.
     </p>
 
-    <!-- ADDED / NEW => Brief results summary -->
     <h3>Results Summary</h3>
     <p>
       Our experiments show that DISCO-AE produces consistently low reconstruction errors,
@@ -366,7 +389,7 @@
     </div>
   </div>
 
-  <!-- The existing instructions below all tabs -->
+  <!-- Instructions Section -->
   <div id="instructions">
     <h2>How to Use This Tool</h2>
     <ol>
@@ -410,7 +433,7 @@
   </div>
 </div><!-- end #mainContainer -->
 
-<!-- FIGURE MODAL -->
+<!-- Figure Modal -->
 <div id="figModal" onclick="closeFigureModal()" style="display:none;">
   <div id="figModalContent">
     <span id="figClose" onclick="closeFigureModal()">&#x274C;</span>
@@ -421,7 +444,7 @@
 
 <script>
 /***********************************************************
- * TABBED NAVIGATION & FIGURE MODAL SCRIPTS
+ * TABBED NAVIGATION & FIGURE MODAL
  ***********************************************************/
 function openTab(tabId) {
   // Hide all tab contents
@@ -439,8 +462,6 @@ function openTab(tabId) {
   }
 
   // Mark the clicked tab button as active
-  // We'll do a simple approach: if the button text includes the tabId
-  // or just do a manual approach:
   if(tabId === 'interactiveTab') {
     allButtons[0].classList.add('active');
   } else if(tabId === 'studyTab') {
@@ -476,7 +497,7 @@ function updatePCContextText() {
     2: 'PC2 may represent vertical orientation or angular differences.',
     3: 'PC3 can indicate localized morphological changes, subtle bulges, etc.',
     4: 'PC4 refines local shape contours further.',
-    // extend if you want
+    // extend if you like
   };
   const xDesc = descriptions[xPCIndex+1] || 'No info for PC'+(xPCIndex+1);
   const yDesc = descriptions[yPCIndex+1] || 'No info for PC'+(yPCIndex+1);
@@ -486,8 +507,7 @@ function updatePCContextText() {
 }
 
 /***********************************************************
- * YOUR ORIGINAL CODE (UNMODIFIED) FOLLOWS
- *   - except we call updatePCContextText() after fillPCSelects
+ * ORIGINAL CODE (fetch, clicks, VTK, etc.)
  ***********************************************************/
 
 // ------------------------------------------------------
@@ -586,7 +606,6 @@ function clearVTKShapes() {
     lookupTable.delete();
     lookupTable=null;
   }
-  // remove the scalarBarActor if present
   if(scalarBarActor) {
     renderer.removeActor2D(scalarBarActor);
     scalarBarActor.delete();
@@ -603,7 +622,6 @@ function resetInterpolationData() {
   const slider= document.getElementById("variantSlider");
   slider.min=0; slider.max=0; slider.value=0;
 }
-
 
 // ------------------------------------------------------
 // 1) FETCH PCA
@@ -644,7 +662,7 @@ function plotDataByGroup() {
   for(let i=0; i<pcaData.length; i++){
     const g= groups[i];
     if(!groupMap[g]) {
-      groupMap[g]={ x:[], y:[] };
+      groupMap[g] = { x:[], y:[] };
     }
     groupMap[g].x.push( pcaData[i][xPCIndex] );
     groupMap[g].y.push( pcaData[i][yPCIndex] );
@@ -701,6 +719,7 @@ function fillPCSelects(){
     ySel.appendChild(oy);
   }
 
+  // default: PC1 vs PC2
   xSel.value="1";
   ySel.value="2";
   xPCIndex=0;
@@ -709,12 +728,12 @@ function fillPCSelects(){
   xSel.onchange= e=>{
     xPCIndex= parseInt(e.target.value)-1;
     handlePCChange();
-    updatePCContextText(); // dynamic
+    updatePCContextText();
   };
   ySel.onchange= e=>{
     yPCIndex= parseInt(e.target.value)-1;
     handlePCChange();
-    updatePCContextText(); // dynamic
+    updatePCContextText();
   };
 
   updatePCContextText(); // initial
@@ -834,12 +853,12 @@ function redrawPlot(){
 // ------------------------------------------------------
 // SOURCE/TARGET Buttons
 // ------------------------------------------------------
-document.getElementById('sourceBtn').onclick=()=>{
+document.getElementById('sourceBtn').onclick = ()=>{
   selectingSource=true;
   selectingTarget=false;
   alert("Click anywhere in the chart to set SOURCE");
 };
-document.getElementById('targetBtn').onclick=()=>{
+document.getElementById('targetBtn').onclick = ()=>{
   selectingTarget=true;
   selectingSource=false;
   alert("Click anywhere in the chart to set TARGET");
@@ -848,7 +867,7 @@ document.getElementById('targetBtn').onclick=()=>{
 // ------------------------------------------------------
 // 3) COMPUTE & INTERPOLATE
 // ------------------------------------------------------
-document.getElementById('computeBtn').onclick= async()=>{
+document.getElementById('computeBtn').onclick = async()=>{
   if(!sourcePC || !targetPC){
     alert("Need both source & target!");
     return;
@@ -856,16 +875,15 @@ document.getElementById('computeBtn').onclick= async()=>{
 
   clearVTKShapes();
   resetInterpolationData();
-
   showSpinner(true);
 
   const payload= { pc_scores: [ sourcePC, targetPC ] };
   console.log("-> /interpolate =>", payload);
 
   try {
-    const resp= await fetch("https://morphvq.net/interpolate", {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
+    const resp = await fetch("https://morphvq.net/interpolate", {
+      method: 'POST',
+      headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify(payload)
     });
     if(!resp.ok) throw new Error(`Interpolation error: ${resp.status}`);
@@ -912,8 +930,9 @@ function computeErrorsAndSetupScene(){
 
   scalarBarActor = vtk.Rendering.Core.vtkScalarBarActor.newInstance();
   scalarBarActor.setScalarsToColors(lookupTable);
-  // older VTK might not have setNumberOfLabels
+  // If your version of VTK supports setNumberOfLabels or setTitle, you can do:
   // scalarBarActor.setTitle("Error");
+  // scalarBarActor.setNumberOfLabels(5);
   // renderer.addActor2D(scalarBarActor);
 
   const slider= document.getElementById("variantSlider");
@@ -972,16 +991,16 @@ function createLookupTable(minVal,maxVal){
   lut.addRGBPoint(minVal, 0.88, 0.85, 0.77);
 
   // mid-tone color
-  lut.addRGBPoint((minVal + maxVal) * 0.5, 1.0, 0.7, 0.5);
+  lut.addRGBPoint((minVal + maxVal)*0.5, 1.0, 0.7, 0.5);
 
-  // Vibrant red
+  // Vibrant red at the high end
   lut.addRGBPoint(maxVal, 1.0, 0.0, 0.0);
 
   return lut;
 }
 
 // slider => pick shape variant
-document.getElementById('variantSlider').oninput= e=>{
+document.getElementById('variantSlider').oninput = e=>{
   updateDisplayedVariant(parseInt(e.target.value));
 };
 
@@ -999,6 +1018,8 @@ function updateDisplayedVariant(index){
   for(let i=0;i<V;i++){
     vtkPoints.setPoint(i, shape[i][0], shape[i][1], shape[i][2]);
   }
+
+  // Build the face array (triangle connectivity)
   const polys= new Uint32Array(F*4);
   for(let f=0; f<F; f++){
     const off= f*4;
