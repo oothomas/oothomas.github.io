@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Mesh Correspondence and Landmarks</title>
+  <title>Mesh Correspondence and Landmarks (vtk.js 22.x)</title>
   
   <style>
     body {
@@ -19,7 +19,7 @@
     }
   </style>
 
-  <!-- Use the official package, @kitware/vtk.js, at a valid version -->
+  <!-- Use vtk.js@22.0.0 -->
   <script src="https://unpkg.com/vtk.js@22.0.0/vtk.js" crossorigin="anonymous"></script>
 
 </head>
@@ -28,7 +28,7 @@
   <div id="view2"></div>
 
   <script>
-    console.log("==== Starting correspondence_and_landmarks script ====");
+    console.log("==== Starting script for vtk.js@22.0.0 ====");
 
     // ----------------------------------------------------------
     // 1) Create two side-by-side VTK views
@@ -55,13 +55,15 @@
     const camera = renderer1.getActiveCamera();
     renderer2.setActiveCamera(camera);
 
+    // In vtk.js 22.x, we typically use onStartAnimation / onEndAnimation
     const updateBoth = () => {
       renderWindow1.render();
       renderWindow2.render();
     };
-    renderWindow1.getInteractor().onAnimation(updateBoth);
+
+    renderWindow1.getInteractor().onStartAnimation(updateBoth);
     renderWindow1.getInteractor().onEndAnimation(updateBoth);
-    renderWindow2.getInteractor().onAnimation(updateBoth);
+    renderWindow2.getInteractor().onStartAnimation(updateBoth);
     renderWindow2.getInteractor().onEndAnimation(updateBoth);
 
     // ----------------------------------------------------------
@@ -73,13 +75,11 @@
       actor: axesActor,
       interactor: renderWindow1.getInteractor(),
     });
+
+    // Many of the setViewportCorner / setViewportSize / setMinPixelSize / setMaxPixelSize 
+    // methods came after 22.x or changed. In 22.x, you can directly set the viewport array.
     orientationWidget.setOrientationMarker(axesActor);
-    orientationWidget.setViewportCorner(
-      vtk.Interaction.Widgets.vtkOrientationMarkerWidget.Corners.BOTTOM_LEFT
-    );
-    orientationWidget.setViewportSize(0.15);
-    orientationWidget.setMinPixelSize(100);
-    orientationWidget.setMaxPixelSize(300);
+    orientationWidget.setViewport([0, 0, 0.2, 0.2]); // [left, bottom, right, top]
     orientationWidget.setEnabled(true);
 
     // ----------------------------------------------------------
@@ -111,18 +111,23 @@
     mapper1.setColorModeToMapScalars();
     mapper1.setScalarModeToUsePointFieldData();
 
-    mapper2.setScalarModeToUsePointFieldData();
+    // For direct RGBA, we typically do:
     mapper2.setColorModeToDirectScalars();
+    mapper2.setScalarModeToUsePointFieldData();
 
     // ----------------------------------------------------------
     // 6) Scalar bar
     // ----------------------------------------------------------
     console.log("Adding scalar bar for mesh1...");
     const scalarBarActor = vtk.Rendering.Core.vtkScalarBarActor.newInstance();
-    scalarBarActor.setScalarsToColors(lut);
+    // setScalarsToColors() was introduced later; in vtk.js 22.x, 
+    // we usually do setLookupTable() instead:
+    scalarBarActor.setLookupTable(lut);
     scalarBarActor.setNumberOfLabels(5);
     scalarBarActor.setTitle('Mesh Scalar');
 
+    // Not all older versions recognized setPosition() in the same way, 
+    // but typically it should still work:
     scalarBarActor.setPosition(0.85, 0.05);
     scalarBarActor.setWidth(0.1);
     scalarBarActor.setHeight(0.4);
@@ -138,6 +143,7 @@
       const polys = polyData.getPolys().getData();
       const nPoints = polyData.getPoints().getNumberOfPoints();
 
+      // build adjacency
       const adjacency = new Array(nPoints).fill(null).map(() => []);
       let idx = 0;
       while (idx < polys.length) {
@@ -184,13 +190,16 @@
       })
       .then((data) => {
         console.log("  -> JSON parsed. Keys in data:", Object.keys(data));
-        const textEnc = new TextEncoder();
-        const mesh1AB = textEnc.encode(JSON.stringify(data.mesh1)).buffer;
-        const mesh2AB = textEnc.encode(JSON.stringify(data.mesh2)).buffer;
 
-        reader1.parseAsArrayBuffer(mesh1AB);
-        reader2.parseAsArrayBuffer(mesh2AB);
+        // Instead of parseAsArrayBuffer, older vtk.js used parseAsText:
+        const mesh1String = JSON.stringify(data.mesh1);
+        const mesh2String = JSON.stringify(data.mesh2);
 
+        // Parse text
+        reader1.parseAsText(mesh1String);
+        reader2.parseAsText(mesh2String);
+
+        // Access the outputs
         const mesh1PolyData = reader1.getOutputData();
         const mesh2PolyData = reader2.getOutputData();
 
