@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Example: Two VTK Viewers with Simplified JSON Mesh Data</title>
+  <title>Two VTK Viewers - Debugging "Cannot set properties of undefined"</title>
 
-  <!-- Using vtk.js v25.0.0 -->
-  <script src="https://unpkg.com/vtk.js@25.0.0/vtk.js"></script>
+  <!-- Use vtk.js@25.0.0 -->
+  <script src="https://unpkg.com/vtk.js@25.15.2/vtk.js"></script>
   
   <style>
     body {
@@ -18,19 +18,11 @@
       margin-bottom: 0.5em;
       text-align: center;
     }
-    /* Container to center content horizontally */
     #mainContainer {
       max-width: 1200px;
       margin: 0 auto;
     }
-    /* Controls bar */
-    .controls {
-      margin-bottom: 1em;
-    }
-    select, button {
-      margin-right: 10px;
-    }
-    /* Flex container for side-by-side viewers */
+    .controls { margin-bottom: 1em; }
     #mainFlex {
       display: flex;
       flex-wrap: wrap;
@@ -42,7 +34,6 @@
       box-sizing: border-box;
       min-width: 0;
     }
-    /* VTK container styling */
     .vtkContainer {
       width: 100%;
       height: 480px;
@@ -50,36 +41,6 @@
       background-color: #EFEFEF;
       position: relative;
     }
-    /* Tab navigation (optional) */
-    .tabLinksContainer {
-      margin-bottom: 1em;
-      text-align: center;
-    }
-    .tabButton {
-      background-color: #ddd;
-      border: none;
-      padding: 8px 12px;
-      cursor: pointer;
-      margin-right: 5px;
-    }
-    .tabButton.active {
-      background-color: #bbb;
-      font-weight: bold;
-    }
-    .tabContent {
-      display: none;
-      background: #fff;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      margin-bottom: 1em;
-      margin: 0 auto;
-      max-width: 1200px;
-    }
-    .tabContent.active {
-      display: block;
-    }
-    /* Simple spinner overlay */
     #spinner {
       display: none;
       position: fixed;
@@ -96,172 +57,126 @@
     #spinnerText {
       background: #fff;
       padding: 20px;
-      border-radius: 5px;
       border: 2px solid #444;
+      border-radius: 5px;
     }
-    /* Info box */
     #infoBox {
       font-weight: bold;
       margin-bottom: 10px;
-    }
-    /* (Optional) Instructions section */
-    #instructions {
-      max-width: 1200px;
-      margin: 2em auto;
-      background: #ffffff;
-      padding: 1em;
-      border: 1px solid #ccc;
-      border-radius: 5px;
     }
   </style>
 </head>
 <body>
 
-<h1>Example: Two VTK Viewers with Simplified JSON Mesh Data</h1>
+<h1>Debugging: "Cannot set properties of undefined"</h1>
 
 <div id="mainContainer">
-  <!-- Tabbed Navigation (optional) -->
-  <div class="tabLinksContainer">
-    <button class="tabButton active" onclick="openTab('interactiveTab')">Interactive Viewer</button>
-    <button class="tabButton" onclick="openTab('studyTab')">About the Study</button>
-    <button class="tabButton" onclick="openTab('figuresTab')">Figures</button>
+  <div class="controls">
+    <button onclick="initTwoViewers()">Initialize Two VTK Viewers</button>
   </div>
 
-  <!-- TAB 1: INTERACTIVE VIEWER -->
-  <div id="interactiveTab" class="tabContent active">
-    <div class="controls">
-      <button onclick="initTwoViewers()">Initialize Two VTK Viewers</button>
-    </div>
-    <div id="infoBox">
-      We will load two meshes (vertices and faces) from JSON and display them side-by-side.
-    </div>
-    <div id="spinner">
-      <div id="spinnerText">Loading...</div>
-    </div>
-    <!-- Flex container for side-by-side viewers -->
-    <div id="mainFlex">
-      <div class="flexItem">
-        <div id="vtkContainerLeft" class="vtkContainer"></div>
-      </div>
-      <div class="flexItem">
-        <div id="vtkContainerRight" class="vtkContainer"></div>
-      </div>
-    </div>
+  <div id="infoBox">No data loaded yet.</div>
+
+  <div id="spinner">
+    <div id="spinnerText">Loading...</div>
   </div>
 
-  <!-- TAB 2: ABOUT THE STUDY (Optional) -->
-  <div id="studyTab" class="tabContent">
-    <h2>About the Study</h2>
-    <p><strong>Title:</strong> Decoding Shape Diversity with DISCO-AE</p>
-    <p><strong>Authors &amp; Affiliations:</strong></p>
-    <ul>
-      <li>O. Thomas et al.</li>
-      <li>Center for Developmental Biology and Regenerative Medicine, Seattle Children’s Research Institute</li>
-      <li>...</li>
-    </ul>
-    <p><strong>Keywords:</strong> Autoencoder, Morphometrics, etc.</p>
-  </div>
-
-  <!-- TAB 3: FIGURES (Optional) -->
-  <div id="figuresTab" class="tabContent">
-    <h2>Key Figures</h2>
-    <p>(Figure thumbnails would go here.)</p>
-  </div>
-
-  <!-- Instructions (Optional) -->
-  <div id="instructions">
-    <h2>How to Use This Tool</h2>
-    <ol>
-      <li>Click “Initialize Two VTK Viewers” to fetch JSON data and display two meshes side-by-side.</li>
-      <li>Open the browser console to track progress.</li>
-    </ol>
+  <div id="mainFlex">
+    <div class="flexItem">
+      <div id="vtkContainerLeft" class="vtkContainer"></div>
+    </div>
+    <div class="flexItem">
+      <div id="vtkContainerRight" class="vtkContainer"></div>
+    </div>
   </div>
 </div>
 
 <script>
-console.log("Script loaded: Initializing tabbed navigation functions.");
-
-function openTab(tabId) {
-  console.log("openTab() called for tab:", tabId);
-  const allTabs = document.querySelectorAll('.tabContent');
-  allTabs.forEach(t => t.classList.remove('active'));
-  const allButtons = document.querySelectorAll('.tabButton');
-  allButtons.forEach(b => b.classList.remove('active'));
-  const thisTab = document.getElementById(tabId);
-  if (thisTab) {
-    thisTab.classList.add('active');
-    console.log("Tab", tabId, "is now active.");
+// ---------------------------------------------------------
+// 1) Build a simple gradient-based color table
+// ---------------------------------------------------------
+function hexToRgb(hexStr) {
+  const hex = hexStr.replace(/^#/, "");
+  let r, g, b;
+  if (hex.length === 3) {
+    r = parseInt(hex[0] + hex[0], 16);
+    g = parseInt(hex[1] + hex[1], 16);
+    b = parseInt(hex[2] + hex[2], 16);
+  } else {
+    r = parseInt(hex.substring(0, 2), 16);
+    g = parseInt(hex.substring(2, 4), 16);
+    b = parseInt(hex.substring(4, 6), 16);
   }
-  if (tabId === 'interactiveTab') {
-    allButtons[0].classList.add('active');
-  } else if (tabId === 'studyTab') {
-    allButtons[1].classList.add('active');
-  } else if (tabId === 'figuresTab') {
-    allButtons[2].classList.add('active');
-  }
+  return [r, g, b];
 }
 
+// Create a color transfer function => produce a flat RGBA array of length 256*4
+function createFlatColorTable(hexColors) {
+  // We'll build a small color transfer function
+  const ctf = vtk.Rendering.Core.vtkColorTransferFunction.newInstance();
+  for (let i = 0; i < hexColors.length; i++) {
+    const frac = i / (hexColors.length - 1);
+    const [r, g, b] = hexToRgb(hexColors[i]);
+    ctf.addRGBPoint(frac, r, g, b);
+  }
+  ctf.build();
+
+  // We'll get 256 color entries with alpha channel
+  const N = 256;
+  const table = ctf.getUint8Table(0, N - 1, N, true); // length = 256*4
+  return table;
+}
+
+// ---------------------------------------------------------
+// 2) Spinner Helpers
+// ---------------------------------------------------------
 function showSpinner(flag) {
-  console.log("showSpinner() called. Flag =", flag);
   const spinDiv = document.getElementById('spinner');
-  spinDiv.style.display = flag ? 'flex' : 'none';
+  spinDiv.style.display = (flag ? 'flex' : 'none');
 }
 
-/***********************************************************
- * MAIN LOGIC: 2 VTK VIEWERS WITH SIMPLIFIED JSON MESH DATA
- ***********************************************************/
-console.log("Script loaded: Setting up main logic for two VTK viewers.");
-
-let fullScreenRenderWindowLeft = null;
-let fullScreenRenderWindowRight = null;
-let rendererLeft = null;
-let rendererRight = null;
-let renderWindowLeft = null;
-let renderWindowRight = null;
+// ---------------------------------------------------------
+// 3) Main Logic for the 2 VTK viewers
+// ---------------------------------------------------------
+let leftView = null, rightView = null;
+let rendererLeft = null, rendererRight = null;
+let renderWindowLeft = null, renderWindowRight = null;
 
 async function initTwoViewers() {
-  console.log("initTwoViewers() called.");
+  console.log("initTwoViewers() called");
   showSpinner(true);
+
   try {
-    // 1) Create left VTK viewer
-    console.log("Creating left VTK viewer...");
-    fullScreenRenderWindowLeft = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
+    // 1) Create the two VTK windows
+    leftView = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
       rootContainer: document.getElementById('vtkContainerLeft'),
-      background: [0.2, 0.2, 0.2],
-      // Uncomment forceDevice if needed: forceDevice: 'webgl',
+      background: [0.2, 0.2, 0.2]
     });
-    rendererLeft = fullScreenRenderWindowLeft.getRenderer();
-    renderWindowLeft = fullScreenRenderWindowLeft.getRenderWindow();
-    console.log("Left viewer created.");
+    rendererLeft = leftView.getRenderer();
+    renderWindowLeft = leftView.getRenderWindow();
 
-    // 2) Create right VTK viewer
-    console.log("Creating right VTK viewer...");
-    fullScreenRenderWindowRight = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
+    rightView = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
       rootContainer: document.getElementById('vtkContainerRight'),
-      background: [0.2, 0.2, 0.2],
+      background: [0.2, 0.2, 0.2]
     });
-    rendererRight = fullScreenRenderWindowRight.getRenderer();
-    renderWindowRight = fullScreenRenderWindowRight.getRenderWindow();
-    console.log("Right viewer created.");
+    rendererRight = rightView.getRenderer();
+    renderWindowRight = rightView.getRenderWindow();
 
-    // 3) Share the camera between both viewers
-    console.log("Sharing camera between viewers...");
+    // Share camera
     const camera = rendererLeft.getActiveCamera();
     rendererRight.setActiveCamera(camera);
 
-    // 4) Sync interactor events
-    console.log("Syncing interactor events...");
-    const updateBoth = () => {
+    // Sync interactions
+    const sync = () => {
       renderWindowLeft.render();
       renderWindowRight.render();
     };
-    renderWindowLeft.getInteractor().onStartAnimation(updateBoth);
-    renderWindowLeft.getInteractor().onEndAnimation(updateBoth);
-    renderWindowRight.getInteractor().onStartAnimation(updateBoth);
-    renderWindowRight.getInteractor().onEndAnimation(updateBoth);
+    renderWindowLeft.getInteractor().onStartAnimation(sync);
+    renderWindowLeft.getInteractor().onEndAnimation(sync);
+    renderWindowRight.getInteractor().onStartAnimation(sync);
+    renderWindowRight.getInteractor().onEndAnimation(sync);
 
-    // 5) Build pipeline objects for each viewer
-    console.log("Building pipeline objects...");
+    // 2) Setup pipeline objects for each viewer
     const mapperLeft = vtk.Rendering.Core.vtkMapper.newInstance();
     const actorLeft = vtk.Rendering.Core.vtkActor.newInstance();
     actorLeft.setMapper(mapperLeft);
@@ -270,164 +185,173 @@ async function initTwoViewers() {
     const actorRight = vtk.Rendering.Core.vtkActor.newInstance();
     actorRight.setMapper(mapperRight);
 
-    // 6) Set up color transfer function for mesh1 (left viewer)
-    console.log("Setting up color transfer function...");
-    const lut = vtk.Rendering.Core.vtkColorTransferFunction.newInstance();
-    lut.addRGBPoint(0.0, 0.267, 0.005, 0.329);
-    lut.addRGBPoint(0.33, 0.128, 0.568, 0.551);
-    lut.addRGBPoint(0.66, 0.369, 0.788, 0.382);
-    lut.addRGBPoint(1.0, 0.993, 0.906, 0.144);
-    // IMPORTANT: Set the mapping range so that getColor() works correctly.
-    lut.setMappingRange(0, 1);
-    // Optionally, force building the table:
-    lut.build();
-    
-    mapperLeft.setLookupTable(lut);
+    // 3) Build a flat color table from a small gradient
+    const grad = ["#440154", "#31688e", "#35b779", "#fde725"];
+    const colorTable = createFlatColorTable(grad); // length=256*4
+
+    // We'll do LUT mapping for left, direct color for right
     mapperLeft.setColorModeToMapScalars();
     mapperLeft.setScalarModeToUsePointFieldData();
-    // For the right viewer, use direct colors
+
     mapperRight.setColorModeToDirectScalars();
     mapperRight.setScalarModeToUsePointFieldData();
 
-    // 7) Fetch JSON mesh data (simplified format)
-    const urlOfJson = "https://oothomas.github.io/assets/data/output_vtk_data.json"; // Update this URL as needed
-    console.log("Fetching JSON from:", urlOfJson);
-    const response = await fetch(urlOfJson);
-    if (!response.ok) {
-      throw new Error(`HTTP error: ${response.status}`);
-    }
-    console.log("JSON fetched successfully.");
-    const data = await response.json();
-    console.log("JSON parsed successfully.");
+    // 4) Fetch JSON data
+    const url = "https://oothomas.github.io/assets/data/output_vtk_data.json";
+    console.log("Fetching JSON from", url);
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error("HTTP error " + resp.status);
+    console.log("JSON fetched. Parsing...");
+    const data = await resp.json();
 
-    // 8) Process mesh1 data (vertices and faces)
-    console.log("Processing mesh1 data...");
-    const mesh1Vertices = data.mesh1.vertices;  // array of [x,y,z]
-    const nVerts1 = mesh1Vertices.length;
-    const flatPoints1 = new Float32Array(nVerts1 * 3);
+    // 5) Convert mesh1 => vtkPolyData
+    console.log("Converting mesh1 => polyData...");
+    const m1v = data.mesh1.vertices;
+    const m1f = data.mesh1.faces;
+    const nVerts1 = m1v.length;
+    const nFaces1 = m1f.length;
+    const flatVerts1 = new Float32Array(nVerts1*3);
     for (let i = 0; i < nVerts1; i++) {
-      flatPoints1[3*i]   = mesh1Vertices[i][0];
-      flatPoints1[3*i+1] = mesh1Vertices[i][1];
-      flatPoints1[3*i+2] = mesh1Vertices[i][2];
+      flatVerts1[3*i+0] = m1v[i][0];
+      flatVerts1[3*i+1] = m1v[i][1];
+      flatVerts1[3*i+2] = m1v[i][2];
     }
     const points1 = vtk.Common.Core.vtkPoints.newInstance();
-    points1.setData(flatPoints1, 3);
-    console.log("Mesh1: Processed", nVerts1, "points.");
+    points1.setData(flatVerts1, 3);
 
-    console.log("Processing mesh1 faces...");
-    const mesh1Faces = data.mesh1.faces;  // array of [i,j,k]
-    const nFaces1 = mesh1Faces.length;
-    const flatFaces1 = new Uint32Array(nFaces1 * 4);
+    const polys1 = new Uint32Array(nFaces1*4);
     for (let i = 0; i < nFaces1; i++) {
-      flatFaces1[4*i]   = 3; // each face is a triangle
-      flatFaces1[4*i+1] = mesh1Faces[i][0];
-      flatFaces1[4*i+2] = mesh1Faces[i][1];
-      flatFaces1[4*i+3] = mesh1Faces[i][2];
+      polys1[4*i] = 3; // triangle
+      polys1[4*i+1] = m1f[i][0];
+      polys1[4*i+2] = m1f[i][1];
+      polys1[4*i+3] = m1f[i][2];
     }
-    console.log("Mesh1: Processed", nFaces1, "faces.");
+    const mesh1Poly = vtk.Common.DataModel.vtkPolyData.newInstance();
+    mesh1Poly.setPoints(points1);
+    mesh1Poly.getPolys().setData(polys1);
 
-    const polyData1 = vtk.Common.DataModel.vtkPolyData.newInstance();
-    polyData1.setPoints(points1);
-    polyData1.getPolys().setData(flatFaces1);
-
-    // 9) Process mesh2 data (vertices and faces)
-    console.log("Processing mesh2 data...");
-    const mesh2Vertices = data.mesh2.vertices;
-    const nVerts2 = mesh2Vertices.length;
-    const flatPoints2 = new Float32Array(nVerts2 * 3);
-    for (let i = 0; i < nVerts2; i++) {
-      flatPoints2[3*i]   = mesh2Vertices[i][0];
-      flatPoints2[3*i+1] = mesh2Vertices[i][1];
-      flatPoints2[3*i+2] = mesh2Vertices[i][2];
-    }
-    const points2 = vtk.Common.Core.vtkPoints.newInstance();
-    points2.setData(flatPoints2, 3);
-    console.log("Mesh2: Processed", nVerts2, "points.");
-
-    console.log("Processing mesh2 faces...");
-    const mesh2Faces = data.mesh2.faces;
-    const nFaces2 = mesh2Faces.length;
-    const flatFaces2 = new Uint32Array(nFaces2 * 4);
-    for (let i = 0; i < nFaces2; i++) {
-      flatFaces2[4*i]   = 3;
-      flatFaces2[4*i+1] = mesh2Faces[i][0];
-      flatFaces2[4*i+2] = mesh2Faces[i][1];
-      flatFaces2[4*i+3] = mesh2Faces[i][2];
-    }
-    console.log("Mesh2: Processed", nFaces2, "faces.");
-
-    const polyData2 = vtk.Common.DataModel.vtkPolyData.newInstance();
-    polyData2.setPoints(points2);
-    polyData2.getPolys().setData(flatFaces2);
-
-    // 10) (Optional) Create a scalar array for mesh1
-    console.log("Creating scalar array for mesh1...");
+    // Create a simple scalar array [0..1].
+    console.log("Creating mesh1 scalars...");
     const scalars1 = new Float32Array(nVerts1);
     for (let i = 0; i < nVerts1; i++) {
       scalars1[i] = i / (nVerts1 - 1);
     }
-    const scalarData1 = vtk.Common.Core.vtkDataArray.newInstance({
-      name: 'mesh1_scalars',
+    const scalarArray1 = vtk.Common.Core.vtkDataArray.newInstance({
+      name: "mesh1_scalars",
       values: scalars1,
-      numberOfComponents: 1,
+      numberOfComponents: 1
     });
-    polyData1.getPointData().setScalars(scalarData1);
-    console.log("Scalar array for mesh1 created.");
+    mesh1Poly.getPointData().setScalars(scalarArray1);
 
-    // 11) Transfer colors from mesh1 to mesh2 using vertexMapping
-    console.log("Transferring colors from mesh1 to mesh2...");
-    const vertexMapping = data.vertexMapping; // e.g., an array mapping mesh1 vertex indices to mesh2 indices
-    const colors2 = new Float32Array(nVerts2 * 3);
-    const counts2 = new Uint32Array(nVerts2);
-    for (let i = 0; i < nVerts1; i++) {
-      const mapped = vertexMapping[i];
-      if (mapped >= 0 && mapped < nVerts2) {
-        // Get color from the LUT based on the scalar value (should be in [0,1])
-        const c = lut.getColor(scalars1[i]);
-        // c should be an array [r, g, b]. If not, we will see an error.
-        colors2[3*mapped + 0] += c[0];
-        colors2[3*mapped + 1] += c[1];
-        colors2[3*mapped + 2] += c[2];
-        counts2[mapped]++;
-      }
-    }
+    // 6) Convert mesh2 => vtkPolyData
+    console.log("Converting mesh2 => polyData...");
+    const m2v = data.mesh2.vertices;
+    const m2f = data.mesh2.faces;
+    const nVerts2 = m2v.length;
+    const nFaces2 = m2f.length;
+    const flatVerts2 = new Float32Array(nVerts2*3);
     for (let i = 0; i < nVerts2; i++) {
-      if (counts2[i] > 0) {
-        colors2[3*i + 0] /= counts2[i];
-        colors2[3*i + 1] /= counts2[i];
-        colors2[3*i + 2] /= counts2[i];
+      flatVerts2[3*i+0] = m2v[i][0];
+      flatVerts2[3*i+1] = m2v[i][1];
+      flatVerts2[3*i+2] = m2v[i][2];
+    }
+    const points2 = vtk.Common.Core.vtkPoints.newInstance();
+    points2.setData(flatVerts2, 3);
+
+    const polys2 = new Uint32Array(nFaces2*4);
+    for (let i = 0; i < nFaces2; i++) {
+      polys2[4*i] = 3;
+      polys2[4*i+1] = m2f[i][0];
+      polys2[4*i+2] = m2f[i][1];
+      polys2[4*i+3] = m2f[i][2];
+    }
+    const mesh2Poly = vtk.Common.DataModel.vtkPolyData.newInstance();
+    mesh2Poly.setPoints(points2);
+    mesh2Poly.getPolys().setData(polys2);
+
+    // 7) Transfer color from mesh1 => mesh2
+    console.log("Transferring color from mesh1 to mesh2...");
+    const vMap = data.vertexMapping; // array of indices: mesh1 => mesh2
+    // Our final color array for mesh2
+    const colors2 = new Float32Array(nVerts2*3);
+    const counts2 = new Uint32Array(nVerts2);
+
+    for (let i = 0; i < nVerts1; i++) {
+      const mapped = vMap[i];
+      if (mapped < 0 || mapped >= nVerts2) {
+        console.warn(`Skipping i=${i}: mapped index ${mapped} invalid for nVerts2=${nVerts2}`);
+        continue;
+      }
+      // Scalar => [0..1]. Then => index [0..255].
+      let s = scalars1[i];
+      if (s < 0) s = 0;
+      if (s > 1) s = 1;
+      const idx = Math.round(s * 255);
+
+      // colorTable has 256 entries * 4 components
+      // RGBA layout, so colorTable[4*idx + 0..3]
+      const base = 4*idx;
+      if (base+2 >= colorTable.length) {
+        console.warn(`Color index out of range: idx=${idx}, base=${base}, colorTableLen=${colorTable.length}`);
+        continue;
+      }
+      // Extract R,G,B from colorTable
+      const r = colorTable[base+0];
+      const g = colorTable[base+1];
+      const b = colorTable[base+2];
+      // We don't use alpha here
+
+      // Accumulate for mesh2
+      const outR = 3*mapped+0;
+      const outG = 3*mapped+1;
+      const outB = 3*mapped+2;
+
+      if (outB >= colors2.length) {
+        console.warn(`Skipping i=${i}: outB index ${outB} out of range, colors2Len=${colors2.length}`);
+        continue;
+      }
+      colors2[outR] += r;
+      colors2[outG] += g;
+      colors2[outB] += b;
+      counts2[mapped]++;
+    }
+
+    // Average color
+    for (let v = 0; v < nVerts2; v++) {
+      const c = counts2[v];
+      if (c > 0) {
+        colors2[3*v+0] /= c;
+        colors2[3*v+1] /= c;
+        colors2[3*v+2] /= c;
       }
     }
-    console.log("Color transfer for mesh2 complete.");
+
+    // Attach to mesh2
     const colorData2 = vtk.Common.Core.vtkDataArray.newInstance({
-      name: 'mesh2_colors',
+      name: "mesh2_colors",
       values: colors2,
-      numberOfComponents: 3,
+      numberOfComponents: 3
     });
-    polyData2.getPointData().setScalars(colorData2);
+    mesh2Poly.getPointData().setScalars(colorData2);
 
-    // 12) Hook up the polydata to the mappers
-    console.log("Hooking up polydata to mappers...");
-    mapperLeft.setInputData(polyData1);
-    mapperRight.setInputData(polyData2);
+    // 8) Assign the polydata => mappers
+    mapperLeft.setInputData(mesh1Poly);
+    mapperRight.setInputData(mesh2Poly);
 
-    // 13) Add actors to the renderers
+    // 9) Add the actors => renderers
     rendererLeft.addActor(actorLeft);
     rendererRight.addActor(actorRight);
-    console.log("Actors added to renderers.");
 
-    // 14) Reset cameras and render both views
-    console.log("Resetting cameras and rendering...");
+    // 10) Reset camera, render
     rendererLeft.resetCamera();
     rendererRight.resetCamera();
     renderWindowLeft.render();
     renderWindowRight.render();
 
-    document.getElementById('infoBox').textContent = "Loaded and displayed two meshes side-by-side.";
-    console.log("initTwoViewers() completed successfully.");
-  } catch (err) {
+    document.getElementById('infoBox').textContent = "Done: Two meshes displayed side-by-side!";
+  } catch(err) {
     console.error("Error initializing viewers:", err);
-    alert("Error initializing viewers: " + err.message);
+    alert("Error initializing viewers: "+err.message);
   } finally {
     showSpinner(false);
   }
