@@ -105,8 +105,8 @@
     const scalarBarActor = vtk.Rendering.Core.vtkScalarBarActor.newInstance();
     scalarBarActor.setScalarsToColors(lut);
     // Some older forks might not support setNumberOfLabels or setTitle
-    scalarBarActor.setNumberOfLabels(5);
-    scalarBarActor.setTitle('Mesh Scalar');
+    // scalarBarActor.setNumberOfLabels(5);
+    // scalarBarActor.setTitle('Mesh Scalar');
     scalarBarActor.setPosition(0.85, 0.05);
     scalarBarActor.setWidth(0.1);
     scalarBarActor.setHeight(0.4);
