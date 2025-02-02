@@ -3,6 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <title>Mesh Correspondence and Landmarks – Modern vtk.js</title>
+
+    <!-- Import Map: Map bare module specifiers to URLs -->
+    <script type="importmap">
+      {
+        "imports": {
+          "fast-deep-equal": "https://unpkg.com/fast-deep-equal@3.1.3/index.js"
+        }
+      }
+    </script>
+
     <style>
       /* Two side-by-side containers */
       body {
@@ -27,7 +37,8 @@
 
     <!-- Use type="module" to import modern vtk.js modules -->
     <script type="module">
-      // Import the needed vtk.js modules from unpkg.com. (Change the version if needed.)
+      // Import the needed vtk.js modules from unpkg.com.
+      // You can change "@latest" to a specific version if needed.
       import vtkFullScreenRenderWindow from "https://unpkg.com/@kitware/vtk.js@latest/Rendering/Misc/FullScreenRenderWindow.js";
       import vtkActor from "https://unpkg.com/@kitware/vtk.js@latest/Rendering/Core/Actor.js";
       import vtkMapper from "https://unpkg.com/@kitware/vtk.js@latest/Rendering/Core/Mapper.js";
