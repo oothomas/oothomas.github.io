@@ -99,18 +99,15 @@
     mapper2.setColorModeToDirectScalars();
 
     // ----------------------------------------------------------
-    // 6) Scalar bar
+    // 6) Minimal scalar bar usage for older vtk.js
     // ----------------------------------------------------------
     console.log("Adding scalar bar for mesh1...");
     const scalarBarActor = vtk.Rendering.Core.vtkScalarBarActor.newInstance();
     scalarBarActor.setScalarsToColors(lut);
-    // Some older forks might not support setNumberOfLabels or setTitle
-    // scalarBarActor.setNumberOfLabels(5);
-    // scalarBarActor.setTitle('Mesh Scalar');
-    scalarBarActor.setPosition(0.85, 0.05);
-    scalarBarActor.setWidth(0.1);
-    scalarBarActor.setHeight(0.4);
-    renderer1.addActor(scalarBarActor);
+
+    // Instead of setPosition(...) or setTitle(...), just add it as a 2D actor
+    // Because older versions often require addActor2D
+    renderer1.addActor2D(scalarBarActor);
 
     // ----------------------------------------------------------
     // 7) Smoothing function for mesh2 color
