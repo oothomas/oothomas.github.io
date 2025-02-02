@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Two VTK Viewers - Using Lookup Table for Colors</title>
+  <meta charset="UTF-8">
+  <title>VTK.js: Pick Nearest Vertex Example</title>
   <script src="https://unpkg.com/vtk.js@25.15.2/vtk.js"></script>
   <style>
     body {
@@ -11,286 +11,341 @@
       background-color: #F9F9F9;
       color: #333;
     }
-    h1 { text-align: center; }
-    #mainContainer { max-width: 1200px; margin: 0 auto; }
+    h1 {
+      text-align: center;
+    }
+    #mainContainer {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
     .vtkContainer {
-      width: 100%; 
+      width: 100%;
       height: 480px;
       border: 1px solid #ccc;
       background-color: #EFEFEF;
       position: relative;
     }
     #mainFlex {
-      display: flex; 
-      flex-wrap: wrap; 
-      gap: 20px; 
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
       margin-bottom: 1em;
     }
     .flexItem {
       flex: 1 1 calc(50% - 10px);
-      box-sizing: border-box; 
+      box-sizing: border-box;
       min-width: 0;
     }
     #spinner {
-      display: none; 
-      position: fixed; 
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       background: rgba(255,255,255,0.6);
-      z-index: 9999; 
-      align-items: center; 
+      z-index: 9999;
+      align-items: center;
       justify-content: center;
-      font-size: 1.5em; 
+      font-size: 1.5em;
       color: #333;
     }
     #spinnerText {
-      background: #fff; 
-      padding: 20px; 
-      border: 2px solid #444; 
+      background: #fff;
+      padding: 20px;
+      border: 2px solid #444;
       border-radius: 5px;
     }
-    #infoBox { 
-      font-weight: bold; 
-      margin-bottom: 10px; 
+    #infoBox {
+      font-weight: bold;
+      margin-bottom: 10px;
     }
-    .controls { 
-      margin-bottom: 1em; 
+    .controls {
+      margin-bottom: 1em;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <h1>Two VTK Viewers - Using Lookup Table for Colors</h1>
+<h1>VTK.js: Pick Nearest Vertex Example</h1>
 
-  <div id="mainContainer">
-    <div class="controls">
-      <button onclick="initTwoViewers()">Initialize Two VTK Viewers</button>
-    </div>
-    <div id="infoBox">No data loaded yet.</div>
-    <div id="spinner">
-      <div id="spinnerText">Loading...</div>
-    </div>
-    <div id="mainFlex">
-      <div class="flexItem">
-        <div id="vtkContainerLeft" class="vtkContainer"></div>
-      </div>
-      <div class="flexItem">
-        <div id="vtkContainerRight" class="vtkContainer"></div>
-      </div>
-    </div>
+<div id="mainContainer">
+  <div class="controls">
+    <button onclick="initViewers()">Initialize</button>
+    <button id="pickBtn" onclick="startVertexPicking()" disabled>Pick Nearest Vertex</button>
+    <button id="clearBtn" onclick="clearGlyph()" disabled>Clear Glyph</button>
+  </div>
+  <div id="infoBox">No data loaded yet.</div>
+  <div id="spinner">
+    <div id="spinnerText">Loading...</div>
   </div>
 
-  <script>
-    // --------------------------------------------------------------------------
-    // 1) Show/hide spinner
-    // --------------------------------------------------------------------------
-    function showSpinner(flag) {
-      const sp = document.getElementById("spinner");
-      sp.style.display = flag ? "flex" : "none";
+  <div id="mainFlex">
+    <div class="flexItem">
+      <div id="vtkContainerLeft" class="vtkContainer"></div>
+    </div>
+    <div class="flexItem">
+      <div id="vtkContainerRight" class="vtkContainer"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// -------------------- Globals --------------------
+let leftView, rightView;
+let rendererLeft, rendererRight, renderWindowLeft, renderWindowRight;
+let meshActorLeft, meshActorRight;
+let polyDataLeft = null;   // store left mesh
+let glyphActor = null;
+let pointPicked = false;
+
+// Show/hide spinner
+function showSpinner(flag) {
+  document.getElementById("spinner").style.display = flag ? "flex" : "none";
+}
+
+// Build a vtkPolyData from vertices/faces/colors
+function buildPolyData(verts, faces, colors) {
+  const nVerts = verts.length;
+  const nFaces = faces.length;
+
+  // Flatten vertices
+  const flatVerts = new Float32Array(nVerts * 3);
+  for (let i = 0; i < nVerts; i++) {
+    flatVerts[3*i + 0] = verts[i][0];
+    flatVerts[3*i + 1] = verts[i][1];
+    flatVerts[3*i + 2] = verts[i][2];
+  }
+  const pts = vtk.Common.Core.vtkPoints.newInstance();
+  pts.setData(flatVerts, 3);
+
+  // Flatten faces
+  const faceArr = new Uint32Array(nFaces * 4);
+  for (let i = 0; i < nFaces; i++) {
+    faceArr[4*i + 0] = 3; // 3 vertices in each cell
+    faceArr[4*i + 1] = faces[i][0];
+    faceArr[4*i + 2] = faces[i][1];
+    faceArr[4*i + 3] = faces[i][2];
+  }
+
+  const poly = vtk.Common.DataModel.vtkPolyData.newInstance();
+  poly.setPoints(pts);
+  poly.getPolys().setData(faceArr);
+
+  // Flatten colors
+  const cArr = vtk.Common.Core.vtkDataArray.newInstance({
+    name: "Colors",
+    values: new Uint8Array(colors.flat()),
+    numberOfComponents: 3,
+    dataType: "Uint8Array",
+  });
+  poly.getPointData().setScalars(cArr);
+
+  return poly;
+}
+
+// -------------------- Init Viewers --------------------
+async function initViewers() {
+  console.log("initViewers() called");
+  showSpinner(true);
+
+  try {
+    // 1) Create left viewer
+    leftView = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
+      rootContainer: document.getElementById("vtkContainerLeft"),
+      background: [0.2, 0.2, 0.2],
+    });
+    rendererLeft = leftView.getRenderer();
+    renderWindowLeft = leftView.getRenderWindow();
+
+    // 2) Create right viewer
+    rightView = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
+      rootContainer: document.getElementById("vtkContainerRight"),
+      background: [0.2, 0.2, 0.2],
+    });
+    rendererRight = rightView.getRenderer();
+    renderWindowRight = rightView.getRenderWindow();
+
+    // Share camera
+    rendererRight.setActiveCamera(rendererLeft.getActiveCamera());
+
+    // Sync interactions
+    const syncRenders = () => {
+      renderWindowLeft.render();
+      renderWindowRight.render();
+    };
+    renderWindowLeft.getInteractor().onStartAnimation(syncRenders);
+    renderWindowLeft.getInteractor().onEndAnimation(syncRenders);
+    renderWindowRight.getInteractor().onStartAnimation(syncRenders);
+    renderWindowRight.getInteractor().onEndAnimation(syncRenders);
+
+    // 3) Create mesh actors
+    const mapperLeft = vtk.Rendering.Core.vtkMapper.newInstance();
+    meshActorLeft = vtk.Rendering.Core.vtkActor.newInstance();
+    meshActorLeft.setMapper(mapperLeft);
+
+    const mapperRight = vtk.Rendering.Core.vtkMapper.newInstance();
+    meshActorRight = vtk.Rendering.Core.vtkActor.newInstance();
+    meshActorRight.setMapper(mapperRight);
+
+    // Make sure it's surface mode, no culling
+    meshActorLeft.getProperty().setRepresentationToSurface();
+    meshActorLeft.getProperty().setBackfaceCulling(false);
+    meshActorLeft.getProperty().setFrontfaceCulling(false);
+    meshActorLeft.setPickable(true);
+
+    meshActorRight.getProperty().setRepresentationToSurface();
+    meshActorRight.getProperty().setBackfaceCulling(false);
+    meshActorRight.getProperty().setFrontfaceCulling(false);
+    meshActorRight.setPickable(true);
+
+    // 4) Fetch JSON
+    const url = "https://oothomas.github.io/assets/data/mesh_data_with_colors.json";
+    console.log("Fetching JSON from", url);
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      throw new Error("HTTP error: " + resp.status);
+    }
+    const data = await resp.json();
+
+    // 5) Build mesh for left
+    const poly1 = buildPolyData(
+      data.mesh1.vertices,
+      data.mesh1.faces,
+      data.mesh1.colors
+    );
+    polyDataLeft = poly1; // store reference
+
+    // 6) Build mesh for right
+    const poly2 = buildPolyData(
+      data.mesh2.vertices,
+      data.mesh2.faces,
+      data.mesh2.colors
+    );
+
+    // 7) Connect poly->mappers
+    mapperLeft.setInputData(poly1);
+    mapperLeft.setColorModeToDirectScalars();
+    mapperLeft.setScalarModeToUsePointData();
+    mapperLeft.setInterpolateScalarsBeforeMapping(true);
+
+    mapperRight.setInputData(poly2);
+    mapperRight.setColorModeToDirectScalars();
+    mapperRight.setScalarModeToUsePointData();
+    mapperRight.setInterpolateScalarsBeforeMapping(true);
+
+    // 8) Add actors to the scene
+    rendererLeft.addActor(meshActorLeft);
+    rendererRight.addActor(meshActorRight);
+
+    // 9) Reset camera, render
+    rendererLeft.resetCamera();
+    rendererRight.resetCamera();
+    renderWindowLeft.render();
+    renderWindowRight.render();
+
+    document.getElementById("infoBox").textContent =
+      "Meshes loaded. Click 'Pick Nearest Vertex' to place a glyph!";
+    document.getElementById("pickBtn").disabled = false;
+    console.log("Success: Meshes displayed, ready for picking!");
+  }
+  catch (err) {
+    console.error("Init error:", err);
+    alert("Error: " + err);
+  }
+  finally {
+    showSpinner(false);
+  }
+}
+
+// -------------------- Start Vertex Picking --------------------
+function startVertexPicking() {
+  if (pointPicked) return;
+
+  // We'll use a PointPicker to find the closest vertex
+  const pointPicker = vtk.Rendering.Core.vtkPointPicker.newInstance();
+  pointPicker.setPickFromList(true); // only pick from specified actor(s)
+  pointPicker.initializePickList();
+  pointPicker.addPickList(meshActorLeft); // only the left mesh
+
+  leftView.getInteractor().setPicker(pointPicker);
+
+  // We'll do a one-time pick on left-button release
+  const releaseSub = leftView.getInteractor().onLeftButtonRelease((ev) => {
+    releaseSub.unsubscribe();
+
+    const rect = leftView.getContainer().getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+
+    // Convert DOM coords => local canvas coords
+    const mouseX = (ev.position.x - rect.left) * dpr;
+    const mouseY = (ev.position.y - rect.top) * dpr;
+    const pickX = mouseX;
+    const pickY = (rect.height * dpr) - mouseY;
+
+    console.log("Attempt vertex-pick at:", pickX, pickY);
+
+    // If outside container, ignore
+    if (pickX < 0 || pickX > rect.width*dpr ||
+        pickY < 0 || pickY > rect.height*dpr) {
+      console.log("Click outside container => ignoring");
+      return;
     }
 
-    // --------------------------------------------------------------------------
-    // 2) Main logic for two VTK viewers using a lookup table to map colors
-    // --------------------------------------------------------------------------
-    async function initTwoViewers() {
-      console.log("initTwoViewers() called.");
-      showSpinner(true);
+    // Attempt pick
+    const pickOk = pointPicker.pick([pickX, pickY, 0], rendererLeft);
+    console.log("pickOk:", pickOk);
 
-      try {
-        // A) Create the left VTK viewer
-        const leftView = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
-          rootContainer: document.getElementById('vtkContainerLeft'),
-          background: [0.2, 0.2, 0.2],
-        });
-        const rendererLeft = leftView.getRenderer();
-        const renderWindowLeft = leftView.getRenderWindow();
-
-        // B) Create the right VTK viewer
-        const rightView = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
-          rootContainer: document.getElementById('vtkContainerRight'),
-          background: [0.2, 0.2, 0.2],
-        });
-        const rendererRight = rightView.getRenderer();
-        const renderWindowRight = rightView.getRenderWindow();
-
-        // Share camera between viewers
-        rendererRight.setActiveCamera(rendererLeft.getActiveCamera());
-
-        // Sync interactions so both views re-render on interaction
-        const syncRender = () => {
-          renderWindowLeft.render();
-          renderWindowRight.render();
-        };
-        renderWindowLeft.getInteractor().onStartAnimation(syncRender);
-        renderWindowLeft.getInteractor().onEndAnimation(syncRender);
-        renderWindowRight.getInteractor().onStartAnimation(syncRender);
-        renderWindowRight.getInteractor().onEndAnimation(syncRender);
-
-        // C) Create mappers and actors for both viewers
-        // --- Use mapping mode (lookup table mode) instead of direct colors
-        const mapperLeft = vtk.Rendering.Core.vtkMapper.newInstance();
-        const actorLeft  = vtk.Rendering.Core.vtkActor.newInstance();
-        actorLeft.setMapper(mapperLeft);
-
-        const mapperRight = vtk.Rendering.Core.vtkMapper.newInstance();
-        const actorRight  = vtk.Rendering.Core.vtkActor.newInstance();
-        actorRight.setMapper(mapperRight);
-
-        // Set mappers to map scalars through a lookup table
-        mapperLeft.setColorModeToMapScalars();
-        mapperLeft.setScalarModeToUsePointData();
-        mapperLeft.setInterpolateScalarsBeforeMapping(true);
-
-        mapperRight.setColorModeToMapScalars();
-        mapperRight.setScalarModeToUsePointData();
-        mapperRight.setInterpolateScalarsBeforeMapping(true);
-
-        // D) Fetch JSON with precomputed colors
-        const url = "https://oothomas.github.io/assets/data/mesh_data_with_colors.json";
-        console.log("Fetching JSON from:", url);
-        const resp = await fetch(url);
-        if (!resp.ok) {
-          throw new Error("HTTP error: " + resp.status);
-        }
-        console.log("JSON fetched. Parsing...");
-        const data = await resp.json();
-        console.log("Parsing done. Constructing mesh1 & mesh2...");
-
-        // E) Construct mesh1
-        const m1v = data.mesh1.vertices;  // Nx3 array of vertices
-        const m1f = data.mesh1.faces;     // Nx3 array of face indices
-        const m1c = data.mesh1.colors;    // Nx3 array of colors in [0..255]
-        const nVerts1 = m1v.length;
-        const nFaces1 = m1f.length;
-
-        // Flatten vertex array for mesh1
-        const flatVerts1 = new Float32Array(nVerts1 * 3);
-        for (let i = 0; i < nVerts1; i++){
-          flatVerts1[3 * i + 0] = m1v[i][0];
-          flatVerts1[3 * i + 1] = m1v[i][1];
-          flatVerts1[3 * i + 2] = m1v[i][2];
-        }
-        const polyPts1 = vtk.Common.Core.vtkPoints.newInstance();
-        polyPts1.setData(flatVerts1, 3);
-
-        // Build face array (each cell: [3, ptId1, ptId2, ptId3])
-        const faceArr1 = new Uint32Array(nFaces1 * 4);
-        for (let i = 0; i < nFaces1; i++){
-          faceArr1[4 * i + 0] = 3;
-          faceArr1[4 * i + 1] = m1f[i][0];
-          faceArr1[4 * i + 2] = m1f[i][1];
-          faceArr1[4 * i + 3] = m1f[i][2];
-        }
-        const poly1 = vtk.Common.DataModel.vtkPolyData.newInstance();
-        poly1.setPoints(polyPts1);
-        poly1.getPolys().setData(faceArr1);
-
-        // Instead of using the 3-component (RGB) array directly, compute a scalar field.
-        // For example, use the average of R, G, and B.
-        const scalarArr1 = new Float32Array(nVerts1);
-        for (let i = 0; i < nVerts1; i++){
-          scalarArr1[i] = (m1c[i][0] + m1c[i][1] + m1c[i][2]) / 3;
-        }
-        const scalars1 = vtk.Common.Core.vtkDataArray.newInstance({
-          name: "mesh1_scalars",
-          values: scalarArr1,
-          numberOfComponents: 1,
-          dataType: 'Float32Array',
-        });
-        poly1.getPointData().setScalars(scalars1);
-        poly1.getPointData().setActiveScalars("mesh1_scalars");
-
-        // F) Construct mesh2 (similar to mesh1)
-        const m2v = data.mesh2.vertices;
-        const m2f = data.mesh2.faces;
-        const m2c = data.mesh2.colors;
-        const nVerts2 = m2v.length;
-        const nFaces2 = m2f.length;
-
-        const flatVerts2 = new Float32Array(nVerts2 * 3);
-        for (let i = 0; i < nVerts2; i++){
-          flatVerts2[3 * i + 0] = m2v[i][0];
-          flatVerts2[3 * i + 1] = m2v[i][1];
-          flatVerts2[3 * i + 2] = m2v[i][2];
-        }
-        const polyPts2 = vtk.Common.Core.vtkPoints.newInstance();
-        polyPts2.setData(flatVerts2, 3);
-
-        const faceArr2 = new Uint32Array(nFaces2 * 4);
-        for (let i = 0; i < nFaces2; i++){
-          faceArr2[4 * i + 0] = 3;
-          faceArr2[4 * i + 1] = m2f[i][0];
-          faceArr2[4 * i + 2] = m2f[i][1];
-          faceArr2[4 * i + 3] = m2f[i][2];
-        }
-        const poly2 = vtk.Common.DataModel.vtkPolyData.newInstance();
-        poly2.setPoints(polyPts2);
-        poly2.getPolys().setData(faceArr2);
-
-        const scalarArr2 = new Float32Array(nVerts2);
-        for (let i = 0; i < nVerts2; i++){
-          scalarArr2[i] = (m2c[i][0] + m2c[i][1] + m2c[i][2]) / 3;
-        }
-        const scalars2 = vtk.Common.Core.vtkDataArray.newInstance({
-          name: "mesh2_scalars",
-          values: scalarArr2,
-          numberOfComponents: 1,
-          dataType: 'Float32Array',
-        });
-        poly2.getPointData().setScalars(scalars2);
-        poly2.getPointData().setActiveScalars("mesh2_scalars");
-
-        // G) Compute a global scalar range (from both meshes) for the lookup table.
-        let globalMin = Infinity, globalMax = -Infinity;
-        for (let i = 0; i < nVerts1; i++){
-          globalMin = Math.min(globalMin, scalarArr1[i]);
-          globalMax = Math.max(globalMax, scalarArr1[i]);
-        }
-        for (let i = 0; i < nVerts2; i++){
-          globalMin = Math.min(globalMin, scalarArr2[i]);
-          globalMax = Math.max(globalMax, scalarArr2[i]);
-        }
-
-        // H) Create a lookup table (color transfer function)
-        // Here we use approximate Viridis endpoints:
-        // Viridis low ≈ (0.267, 0.004, 0.329)
-        // Viridis high ≈ (0.993, 0.906, 0.144)
-        // (The midpoint is interpolated.)
-        const lut = vtk.Rendering.Core.vtkColorTransferFunction.newInstance();
-        lut.addRGBPoint(globalMin, 0.267, 0.004, 0.329);
-        lut.addRGBPoint((globalMin + globalMax) * 0.5, 0.127, 0.566, 0.550);
-        lut.addRGBPoint(globalMax, 0.993, 0.906, 0.144);
-
-        // I) Connect polydata to mappers and assign the lookup table
-        mapperLeft.setInputData(poly1);
-        mapperLeft.setLookupTable(lut);
-        mapperLeft.setUseLookupTableScalarRange(true);
-
-        mapperRight.setInputData(poly2);
-        mapperRight.setLookupTable(lut);
-        mapperRight.setUseLookupTableScalarRange(true);
-
-        // J) Add actors to renderers
-        rendererLeft.addActor(actorLeft);
-        rendererRight.addActor(actorRight);
-
-        // K) Reset cameras and render both views
-        rendererLeft.resetCamera();
-        rendererRight.resetCamera();
-        renderWindowLeft.render();
-        renderWindowRight.render();
-
-        document.getElementById('infoBox').textContent =
-          "Done: Two meshes displayed side-by-side (using lookup table for colors)!";
-        console.log("Success: displayed both meshes with lookup table mapping!");
-      }
-      catch (err) {
-        console.error("Error initializing viewers:", err);
-        alert("Error initializing viewers: " + err.message);
-      }
-      finally {
-        showSpinner(false);
-      }
+    // If success, we get a pointId
+    const pointId = pointPicker.getPointId();
+    console.log("Picked pointId:", pointId);
+    if (pointId < 0) {
+      console.log("No vertex picked => abort");
+      return;
     }
-  </script>
+
+    // Retrieve the 3D coords from that pointId
+    const pickedCoord = [0, 0, 0];
+    polyDataLeft.getPoints().getPoint(pointId, pickedCoord);
+    console.log("Picked vertex coords:", pickedCoord);
+
+    // Place a small sphere glyph at that vertex
+    const sphereSource = vtk.Filters.Sources.vtkSphereSource.newInstance({
+      radius: 0.02, // or something suitable
+      thetaResolution: 16,
+      phiResolution: 16,
+    });
+    const sphereMapper = vtk.Rendering.Core.vtkMapper.newInstance();
+    sphereMapper.setInputConnection(sphereSource.getOutputPort());
+    glyphActor = vtk.Rendering.Core.vtkActor.newInstance();
+    glyphActor.setMapper(sphereMapper);
+    glyphActor.getProperty().setColor(1,0,0); // red
+    glyphActor.setPosition(...pickedCoord);
+    rendererLeft.addActor(glyphActor);
+
+    // Re-render
+    renderWindowLeft.render();
+
+    pointPicked = true;
+    document.getElementById("pickBtn").disabled = true;
+    document.getElementById("clearBtn").disabled = false;
+  });
+}
+
+// -------------------- Clear the glyph --------------------
+function clearGlyph() {
+  if (!pointPicked) return;
+
+  if (glyphActor) {
+    rendererLeft.removeActor(glyphActor);
+    glyphActor = null;
+  }
+  renderWindowLeft.render();
+
+  pointPicked = false;
+  document.getElementById("pickBtn").disabled = false;
+  document.getElementById("clearBtn").disabled = true;
+}
+</script>
 </body>
 </html>
