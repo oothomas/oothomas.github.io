@@ -2,34 +2,36 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Modern vtk.js with Import Map & All Dependencies</title>
-    <!-- Load es-module-shims to polyfill import map support if needed -->
+    <title>Modern vtk.js with Full Features</title>
+    <!-- Polyfill for import maps (for browsers that don't support them natively) -->
     <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
     
-    <!-- Import map for bare module specifiers -->
+    <!-- Import map: all bare module specifiers are mapped to ESM-friendly URLs -->
     <script type="importmap">
-        {
-          "imports": {
-            "@babel/runtime/": "https://unpkg.com/@babel/runtime@7.20.0/",
-            "d3-scale": "https://unpkg.com/d3-scale@4.0.2/dist/d3-scale.min.js",
-            "fflate": "https://unpkg.com/fflate@0.8.2/umd/index.js",
-            "gl-matrix": "https://cdn.skypack.dev/gl-matrix@3.4.3",
-            "globalthis": "https://cdn.skypack.dev/globalthis@1.0.0",
-            "seedrandom": "https://esm.sh/seedrandom@3.0.5",
-            "fast-deep-equal": "https://cdn.skypack.dev/fast-deep-equal@3.1.3",
-            "shader-loader": "https://unpkg.com/shader-loader@1.3.1/index.js",
-            "shelljs": "https://unpkg.com/shelljs@0.8.5/shell.js",
-            "spark-md5": "https://unpkg.com/spark-md5@3.0.2/spark-md5.min.js",
-            "stream-browserify": "https://unpkg.com/stream-browserify@3.0.0/index.js",
-            "utif": "https://unpkg.com/utif@3.1.0/UTIF.js",
-            "webworker-promise": "https://unpkg.com/webworker-promise@0.5.1/lib/index.js",
-            "worker-loader": "https://unpkg.com/worker-loader@3.0.8/dist/cjs.js",
-            "xmlbuilder2": "https://unpkg.com/xmlbuilder2@3.1.1/lib/xmlbuilder2.min.js"
-          }
+      {
+        "imports": {
+          "@babel/runtime/": "https://unpkg.com/@babel/runtime@7.20.0/",
+          "d3-scale": "https://unpkg.com/d3-scale@4.0.2/dist/d3-scale.min.js",
+          "fflate": "https://unpkg.com/fflate@0.8.2/umd/index.js",
+          "gl-matrix": "https://cdn.skypack.dev/gl-matrix@3.4.3",
+          "globalthis": "https://cdn.skypack.dev/globalthis@1.0.0",
+          "seedrandom": "https://esm.sh/seedrandom@3.0.5",
+          "fast-deep-equal": "https://cdn.skypack.dev/fast-deep-equal@3.1.3",
+          "shader-loader": "https://unpkg.com/shader-loader@1.3.1/index.js",
+          "shelljs": "https://unpkg.com/shelljs@0.8.5/shell.js",
+          "spark-md5": "https://esm.sh/spark-md5@3.0.2",
+          "stream-browserify": "https://unpkg.com/stream-browserify@3.0.0/index.js",
+          "utif": "https://unpkg.com/utif@3.1.0/UTIF.js",
+          "webworker-promise": "https://unpkg.com/webworker-promise@0.5.1/lib/index.js",
+          "worker-loader": "https://unpkg.com/worker-loader@3.0.8/dist/cjs.js",
+          "xmlbuilder2": "https://unpkg.com/xmlbuilder2@3.1.1/lib/xmlbuilder2.min.js",
+          "blueimp-md5": "https://cdn.skypack.dev/blueimp-md5"
         }
-        </script>
+      }
+    </script>
+    
     <style>
-      /* Two side-by-side containers */
+      /* Create two side-by-side full-screen containers */
       body {
         margin: 0;
         padding: 0;
@@ -46,42 +48,43 @@
     </style>
   </head>
   <body>
-    <!-- Two containers for the two vtk.js render windows -->
+    <!-- Containers for the two render windows -->
     <div id="view1"></div>
     <div id="view2"></div>
 
     <!-- Main script using ES module imports -->
     <script type="module">
-      // Import vtk.js modules from unpkg.com.
-      // (Replace "@latest" with a specific version if needed.)
-      import vtkFullScreenRenderWindow from "https://unpkg.com/@kitware/vtk.js@latest/Rendering/Misc/FullScreenRenderWindow.js";
-      import vtkActor from "https://unpkg.com/@kitware/vtk.js@latest/Rendering/Core/Actor.js";
-      import vtkMapper from "https://unpkg.com/@kitware/vtk.js@latest/Rendering/Core/Mapper.js";
-      import vtkHttpDataSetReader from "https://unpkg.com/@kitware/vtk.js@latest/IO/Core/HttpDataSetReader.js";
-      import vtkColorTransferFunction from "https://unpkg.com/@kitware/vtk.js@latest/Rendering/Core/ColorTransferFunction.js";
-      import vtkScalarBarActor from "https://unpkg.com/@kitware/vtk.js@latest/Rendering/Core/ScalarBarActor.js";
-      import vtkDataArray from "https://unpkg.com/@kitware/vtk.js@latest/Common/Core/DataArray.js";
+      // Use a pinned, stable version of vtk.js (here 22.0.0)
+      import vtkFullScreenRenderWindow from "https://unpkg.com/@kitware/vtk.js@22.0.0/Rendering/Misc/FullScreenRenderWindow.js";
+      import vtkActor from "https://unpkg.com/@kitware/vtk.js@22.0.0/Rendering/Core/Actor.js";
+      import vtkMapper from "https://unpkg.com/@kitware/vtk.js@22.0.0/Rendering/Core/Mapper.js";
+      import vtkHttpDataSetReader from "https://unpkg.com/@kitware/vtk.js@22.0.0/IO/Core/HttpDataSetReader.js";
+      import vtkColorTransferFunction from "https://unpkg.com/@kitware/vtk.js@22.0.0/Rendering/Core/ColorTransferFunction.js";
+      import vtkScalarBarActor from "https://unpkg.com/@kitware/vtk.js@22.0.0/Rendering/Core/ScalarBarActor.js";
+      import vtkDataArray from "https://unpkg.com/@kitware/vtk.js@22.0.0/Common/Core/DataArray.js";
 
-      // 1) Create two side-by-side vtk render windows.
+      // 1. Create two side-by-side vtk.js render windows (disabling the orientation widget)
       const fullScreenRenderWindow1 = vtkFullScreenRenderWindow.newInstance({
         rootContainer: document.getElementById("view1"),
-        background: [0.2, 0.2, 0.2]
+        background: [0.2, 0.2, 0.2],
+        enableOrientationWidget: false
       });
       const renderer1 = fullScreenRenderWindow1.getRenderer();
       const renderWindow1 = fullScreenRenderWindow1.getRenderWindow();
 
       const fullScreenRenderWindow2 = vtkFullScreenRenderWindow.newInstance({
         rootContainer: document.getElementById("view2"),
-        background: [0.2, 0.2, 0.2]
+        background: [0.2, 0.2, 0.2],
+        enableOrientationWidget: false
       });
       const renderer2 = fullScreenRenderWindow2.getRenderer();
       const renderWindow2 = fullScreenRenderWindow2.getRenderWindow();
 
-      // 2) Share the camera between the two renderers.
+      // 2. Share the same camera between both renderers
       const camera = renderer1.getActiveCamera();
       renderer2.setActiveCamera(camera);
 
-      // Ensure both render windows update together.
+      // Ensure both render windows update together
       function updateBoth() {
         renderWindow1.render();
         renderWindow2.render();
@@ -91,7 +94,7 @@
       renderWindow2.getInteractor().onAnimation(updateBoth);
       renderWindow2.getInteractor().onEndAnimation(updateBoth);
 
-      // 3) Set up pipeline objects.
+      // 3. Set up pipeline objects: readers, mappers, and actors
       const reader1 = vtkHttpDataSetReader.newInstance();
       const reader2 = vtkHttpDataSetReader.newInstance();
 
@@ -103,7 +106,7 @@
       const actor2 = vtkActor.newInstance();
       actor2.setMapper(mapper2);
 
-      // 4) Create a color transfer function (lookup table).
+      // 4. Create a color transfer function (lookup table)
       const lut = vtkColorTransferFunction.newInstance();
       lut.addRGBPoint(0.0, 0.267, 0.005, 0.329);
       lut.addRGBPoint(0.33, 0.128, 0.568, 0.551);
@@ -117,12 +120,12 @@
       mapper2.setScalarModeToUsePointFieldData();
       mapper2.setColorModeToDirectScalars();
 
-      // 5) Add a scalar bar (color legend) to renderer1.
+      // 5. Add a scalar bar (color legend) to renderer1
       const scalarBarActor = vtkScalarBarActor.newInstance();
       scalarBarActor.setScalarsToColors(lut);
       renderer1.addActor(scalarBarActor);
 
-      // 6) Define a smoothing function for mesh2's color array.
+      // 6. Define a smoothing function for mesh2's color array
       function smoothColorArray(polyData, colorArray) {
         const polys = polyData.getPolys().getData();
         const nPoints = polyData.getPoints().getNumberOfPoints();
@@ -157,7 +160,7 @@
         return newColor;
       }
 
-      // 7) Fetch JSON data, build the pipelines, and render.
+      // 7. Fetch JSON data, build the pipelines, and render
       const urlOfJson = "https://oothomas.github.io/assets/data/output_vtk_data.json";
       fetch(urlOfJson)
         .then(response => response.json())
@@ -171,10 +174,9 @@
 
           const mesh1PolyData = reader1.getOutputData();
           const mesh2PolyData = reader2.getOutputData();
-
           const vertexMapping = data.vertexMapping;
 
-          // (A) Create a scalar array for mesh1.
+          // (A) Create a scalar array for mesh1 (values from 0 to 1)
           const nVerts1 = mesh1PolyData.getPoints().getNumberOfPoints();
           const scalars1 = new Float32Array(nVerts1);
           for (let i = 0; i < nVerts1; i++) {
@@ -187,14 +189,14 @@
           });
           mesh1PolyData.getPointData().setScalars(scalarData1);
 
-          // (B) Transfer colors from mesh1 to mesh2 using vertex mapping.
+          // (B) Transfer colors from mesh1 to mesh2 using vertex mapping
           const nVerts2 = mesh2PolyData.getPoints().getNumberOfPoints();
           const colors2 = new Float32Array(nVerts2 * 3);
           const counts2 = new Uint32Array(nVerts2);
           for (let i = 0; i < nVerts1; i++) {
             const mapped = vertexMapping[i];
             if (mapped >= 0 && mapped < nVerts2) {
-              const c = lut.getColor(scalars1[i]); // [r, g, b]
+              const c = lut.getColor(scalars1[i]); // returns [r, g, b]
               colors2[3 * mapped + 0] += c[0];
               colors2[3 * mapped + 1] += c[1];
               colors2[3 * mapped + 2] += c[2];
@@ -209,7 +211,7 @@
             }
           }
 
-          // Smooth mesh2 colors.
+          // Optionally smooth mesh2 colors
           const smoothedColors2 = smoothColorArray(mesh2PolyData, colors2);
           const colorData2 = vtkDataArray.newInstance({
             name: "mesh2_colors",
@@ -218,12 +220,13 @@
           });
           mesh2PolyData.getPointData().setScalars(colorData2);
 
+          // Connect polydata to mappers and add actors to renderers
           mapper1.setInputData(mesh1PolyData);
           mapper2.setInputData(mesh2PolyData);
-
           renderer1.addActor(actor1);
           renderer2.addActor(actor2);
 
+          // Reset cameras and render
           renderer1.resetCamera();
           renderer2.resetCamera();
           renderWindow1.render();
