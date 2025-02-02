@@ -19,11 +19,11 @@
     }
   </style>
 
-  <!-- Use the official package, @kitware/vtk.js, at a valid version -->
-  <script src="https://unpkg.com/vtk.js@32.9.1/vtk.js" crossorigin="anonymous"></script>
-
+  <!-- This uses the old fork of vtk.js from unpkg.com/vtk.js -->
+  <script src="https://unpkg.com/vtk.js"></script>
 </head>
 <body>
+  <!-- Two containers for side-by-side VTK views -->
   <div id="view1"></div>
   <div id="view2"></div>
 
@@ -55,32 +55,16 @@
     const camera = renderer1.getActiveCamera();
     renderer2.setActiveCamera(camera);
 
-    const updateBoth = () => {
+    function updateBoth() {
       renderWindow1.render();
       renderWindow2.render();
-    };
+    }
     renderWindow1.getInteractor().onAnimation(updateBoth);
     renderWindow1.getInteractor().onEndAnimation(updateBoth);
     renderWindow2.getInteractor().onAnimation(updateBoth);
     renderWindow2.getInteractor().onEndAnimation(updateBoth);
 
-    // ----------------------------------------------------------
-    // 3) Orientation Marker
-    // ----------------------------------------------------------
-    console.log("Setting up orientation marker...");
-    const axesActor = vtk.Rendering.Core.vtkAxesActor.newInstance();
-    const orientationWidget = vtk.Interaction.Widgets.vtkOrientationMarkerWidget.newInstance({
-      actor: axesActor,
-      interactor: renderWindow1.getInteractor(),
-    });
-    orientationWidget.setOrientationMarker(axesActor);
-    orientationWidget.setViewportCorner(
-      vtk.Interaction.Widgets.vtkOrientationMarkerWidget.Corners.BOTTOM_LEFT
-    );
-    orientationWidget.setViewportSize(0.15);
-    orientationWidget.setMinPixelSize(100);
-    orientationWidget.setMaxPixelSize(300);
-    orientationWidget.setEnabled(true);
+    // (No orientation marker to avoid TypeError in the old vtk.js fork)
 
     // ----------------------------------------------------------
     // 4) Create pipeline objects
@@ -120,13 +104,12 @@
     console.log("Adding scalar bar for mesh1...");
     const scalarBarActor = vtk.Rendering.Core.vtkScalarBarActor.newInstance();
     scalarBarActor.setScalarsToColors(lut);
+    // Some older forks might not support setNumberOfLabels or setTitle
     scalarBarActor.setNumberOfLabels(5);
     scalarBarActor.setTitle('Mesh Scalar');
-
     scalarBarActor.setPosition(0.85, 0.05);
     scalarBarActor.setWidth(0.1);
     scalarBarActor.setHeight(0.4);
-
     renderer1.addActor(scalarBarActor);
 
     // ----------------------------------------------------------
@@ -138,6 +121,7 @@
       const polys = polyData.getPolys().getData();
       const nPoints = polyData.getPoints().getNumberOfPoints();
 
+      // adjacency list
       const adjacency = new Array(nPoints).fill(null).map(() => []);
       let idx = 0;
       while (idx < polys.length) {
@@ -184,13 +168,17 @@
       })
       .then((data) => {
         console.log("  -> JSON parsed. Keys in data:", Object.keys(data));
+
+        // Convert mesh data to ArrayBuffer for vtkHttpDataSetReader
         const textEnc = new TextEncoder();
         const mesh1AB = textEnc.encode(JSON.stringify(data.mesh1)).buffer;
         const mesh2AB = textEnc.encode(JSON.stringify(data.mesh2)).buffer;
 
+        // Parse them
         reader1.parseAsArrayBuffer(mesh1AB);
         reader2.parseAsArrayBuffer(mesh2AB);
 
+        // Output PolyData
         const mesh1PolyData = reader1.getOutputData();
         const mesh2PolyData = reader2.getOutputData();
 
@@ -200,11 +188,11 @@
         const vertexMapping = data.vertexMapping;
         console.log("  -> vertexMapping length:", vertexMapping.length);
 
-        // (A) mesh1 scalar array
+        // (A) mesh1 scalar array (0..1)
         const nVerts1 = mesh1PolyData.getPoints().getNumberOfPoints();
         const scalars1 = new Float32Array(nVerts1);
         for (let i = 0; i < nVerts1; i++) {
-          scalars1[i] = i / (nVerts1 - 1); // 0..1
+          scalars1[i] = i / (nVerts1 - 1);
         }
         const scalarData1 = vtk.Common.Core.vtkDataArray.newInstance({
           name: 'mesh1_scalars',
@@ -221,7 +209,7 @@
         for (let i = 0; i < nVerts1; i++) {
           const mapped = vertexMapping[i];
           if (mapped >= 0 && mapped < nVerts2) {
-            const c = lut.getColor(scalars1[i]); // [r, g, b]
+            const c = lut.getColor(scalars1[i]); // [r, g, b] in [0..1]
             colors2[3 * mapped + 0] += c[0];
             colors2[3 * mapped + 1] += c[1];
             colors2[3 * mapped + 2] += c[2];
@@ -229,7 +217,7 @@
           }
         }
 
-        // average + black defaults
+        // Average each vertex
         for (let v = 0; v < nVerts2; v++) {
           if (counts2[v] > 0) {
             colors2[3 * v + 0] /= counts2[v];
@@ -247,7 +235,7 @@
         });
         mesh2PolyData.getPointData().setScalars(colorData2);
 
-        // Hook up to the scene
+        // Hook up to each renderer
         mapper1.setInputData(mesh1PolyData);
         mapper2.setInputData(mesh2PolyData);
 
