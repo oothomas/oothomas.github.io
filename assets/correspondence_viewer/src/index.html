@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>My vtk.js App</title>
+    <style>
+      /* Two side-by-side full-screen containers */
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: row;
+      }
+      #view1,
+      #view2 {
+        width: 50%;
+        height: 100vh;
+        overflow: hidden;
+        position: relative;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Containers for the two render windows -->
+    <div id="view1"></div>
+    <div id="view2"></div>
+    <!-- Main script -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
