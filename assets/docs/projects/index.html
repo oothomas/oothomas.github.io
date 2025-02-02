@@ -6,10 +6,11 @@
     <!-- Polyfill for import maps (for browsers that don't support them natively) -->
     <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
     
-    <!-- Import map: all bare module specifiers are mapped to ESM-friendly URLs -->
+    <!-- Import map: map bare module specifiers to ESM-friendly URLs -->
     <script type="importmap">
       {
         "imports": {
+          "@babel/runtime/helpers/defineProperty": "./babel-runtime-defineProperty-shim.js",
           "@babel/runtime/": "https://unpkg.com/@babel/runtime@7.20.0/",
           "d3-scale": "https://unpkg.com/d3-scale@4.0.2/dist/d3-scale.min.js",
           "fflate": "https://unpkg.com/fflate@0.8.2/umd/index.js",
@@ -48,10 +49,10 @@
     </style>
   </head>
   <body>
-    <!-- Containers for the two render windows -->
+    <!-- Containers for the two vtk.js render windows -->
     <div id="view1"></div>
     <div id="view2"></div>
-
+    
     <!-- Main script using ES module imports -->
     <script type="module">
       // Use a pinned, stable version of vtk.js (here 22.0.0)
@@ -211,7 +212,7 @@
             }
           }
 
-          // Optionally smooth mesh2 colors
+          // Optionally, smooth mesh2 colors
           const smoothedColors2 = smoothColorArray(mesh2PolyData, colors2);
           const colorData2 = vtkDataArray.newInstance({
             name: "mesh2_colors",
