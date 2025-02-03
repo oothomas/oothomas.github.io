@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>VTK.js: 3 Random Farthest Points + T12 Mapping</title>
+  <title>Multi-Dataset Viewer with 3 Random Farthest Points + T12</title>
   <script src="https://unpkg.com/vtk.js@25.15.2/vtk.js"></script>
   <style>
     body {
@@ -11,13 +11,8 @@
       background-color: #F9F9F9;
       color: #333;
     }
-    h1 {
-      text-align: center;
-    }
-    #mainContainer {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
+    h1 { text-align: center; }
+    #mainContainer { max-width: 1200px; margin: 0 auto; }
     .vtkContainer {
       width: 100%;
       height: 480px;
@@ -45,7 +40,7 @@
       z-index: 9999;
       align-items: center;
       justify-content: center;
-      font-size: 1.5em;
+      font-size: 1.5em; 
       color: #333;
     }
     #spinnerText {
@@ -62,14 +57,25 @@
       margin-bottom: 1em;
       text-align: center;
     }
+    button { margin: 0 0.3em; }
   </style>
 </head>
 <body>
-<h1>VTK.js: 3 Random Farthest Points + T12 Mapping</h1>
+<h1>Multi-Dataset Viewer: 3 Farthest Points + T12 Mapping</h1>
 
 <div id="mainContainer">
   <div class="controls">
-    <button onclick="initViewers()">Initialize</button>
+    <!-- 1) Initialize the VTK viewers once -->
+    <button id="initBtn" onclick="initViewers()">Initialize</button>
+    
+    <!-- 2) Buttons for the 5 data sets -->
+    <button id="data1Btn" onclick="loadDataset(0)" disabled>Data 1</button>
+    <button id="data2Btn" onclick="loadDataset(1)" disabled>Data 2</button>
+    <button id="data3Btn" onclick="loadDataset(2)" disabled>Data 3</button>
+    <button id="data4Btn" onclick="loadDataset(3)" disabled>Data 4</button>
+    <button id="data5Btn" onclick="loadDataset(4)" disabled>Data 5</button>
+    
+    <!-- 3) Place 3 Farthest Points button -->
     <button id="farthestBtn" onclick="placeFarthestPoints()" disabled>Place 3 Farthest Points</button>
   </div>
   <div id="infoBox">No data loaded yet.</div>
@@ -91,34 +97,57 @@
 // -------------------- GLOBALS --------------------
 let leftView, rightView;
 let rendererLeft, rendererRight, renderWindowLeft, renderWindowRight;
-let meshActorLeft, meshActorRight;
-let polyDataLeft = null, polyDataRight = null; 
-let vertexMapping = null;  // T12 from JSON => mesh1->mesh2
-let glyphActorsLeft = [];  // We'll store the 3 spheres for mesh1
-let glyphActorsRight = []; // We'll store the 3 spheres for mesh2
 
-// Show/hide spinner
+// Actors for the two meshes
+let meshActorLeft = null;
+let meshActorRight = null;
+
+// PolyData references
+let polyDataLeft = null;
+let polyDataRight = null;
+
+// The T12 array from JSON => mapping mesh1->mesh2
+let vertexMapping = null;
+
+// Store glyph actors for the 3 points on each mesh
+let glyphActorsLeft = [];
+let glyphActorsRight = [];
+
+// The 5 data file stems. You mentioned these in your screenshot:
+const dataFiles = [
+  "Alouatta_seniculus_211531_CUB_Ateles_belzebuth_188126_CUB.json",
+  "Cebus_apella_133607_CUB_Chlorocebus_sabaeus_21532_CUB.json",
+  "Cercopithecus_cephus_119623_CUB_Homo_9864_CUB.json",
+  "Chlorocebus_sabaeus_21532_CUB_Cercopithecus_ascanius_52554_CUB.json",
+  "Colobus_guereza_52240_CUB_Homo_9858_CUB.json"
+];
+const dataBaseUrl = "https://oothomas.github.io/assets/data/";
+
+
+// 1) Show/hide spinner
 function showSpinner(flag) {
   document.getElementById("spinner").style.display = flag ? "flex" : "none";
 }
 
-// Build polydata
+// 2) Build polydata from JSON structure
 function buildPolyData(verts, faces, colors) {
   const nVerts = verts.length;
   const nFaces = faces.length;
 
+  // Flatten vertex array
   const flatVerts = new Float32Array(nVerts*3);
   for(let i=0; i<nVerts; i++){
-    flatVerts[3*i]   = verts[i][0];
+    flatVerts[3*i+0] = verts[i][0];
     flatVerts[3*i+1] = verts[i][1];
     flatVerts[3*i+2] = verts[i][2];
   }
   const pts = vtk.Common.Core.vtkPoints.newInstance();
   pts.setData(flatVerts,3);
 
+  // Flatten faces
   const faceArr = new Uint32Array(nFaces*4);
   for(let i=0; i<nFaces; i++){
-    faceArr[4*i+0] = 3; // triangle
+    faceArr[4*i+0] = 3; 
     faceArr[4*i+1] = faces[i][0];
     faceArr[4*i+2] = faces[i][1];
     faceArr[4*i+3] = faces[i][2];
@@ -128,87 +157,79 @@ function buildPolyData(verts, faces, colors) {
   poly.setPoints(pts);
   poly.getPolys().setData(faceArr);
 
+  // Colors
   const cArr = vtk.Common.Core.vtkDataArray.newInstance({
-    name:"Colors",
-    values:new Uint8Array(colors.flat()),
-    numberOfComponents:3,
-    dataType:"Uint8Array",
+    name: "Colors",
+    values: new Uint8Array(colors.flat()),
+    numberOfComponents: 3,
+    dataType: "Uint8Array"
   });
   poly.getPointData().setScalars(cArr);
+
   return poly;
 }
 
-// Distance helper
-function euclidianDistSq(x1,y1,z1, x2,y2,z2){
-  const dx=x2-x1, dy=y2-y1, dz=z2-z1;
+// 3) pickFarthest3 => 3 "far-apart" vertex indices on a polydata
+function pickFarthest3(poly) {
+  const n = poly.getPoints().getNumberOfPoints();
+  if(n<3){
+    console.warn("Not enough vertices to pick 3 farthest points!");
+    return [0,0,0];
+  }
+  // Step1: random v0
+  const v0 = Math.floor(Math.random()*n);
+
+  // Step2: find v1 => farthest from v0
+  let best = -1, v1 = 0;
+  const tmp0=[0,0,0], tmpX=[0,0,0];
+  poly.getPoints().getPoint(v0, tmp0);
+  for(let i=0;i<n;i++){
+    poly.getPoints().getPoint(i, tmpX);
+    const dsq= distSq(tmp0, tmpX);
+    if(dsq>best){
+      best=dsq; v1=i;
+    }
+  }
+
+  // Step3: find v2 => farthest from {v0,v1}
+  best=-1;
+  let v2=0;
+  const tmp1=[0,0,0];
+  poly.getPoints().getPoint(v1, tmp1);
+  for(let i=0;i<n;i++){
+    poly.getPoints().getPoint(i, tmpX);
+    const d0= distSq(tmp0, tmpX);
+    const d1= distSq(tmp1, tmpX);
+    const minD= Math.min(d0,d1);
+    if(minD>best){
+      best=minD; v2=i;
+    }
+  }
+  return [v0,v1,v2];
+}
+
+// distance squared
+function distSq(a,b){
+  const dx=b[0]-a[0], dy=b[1]-a[1], dz=b[2]-a[2];
   return dx*dx + dy*dy + dz*dz;
 }
 
-// pickFarthest3
-// 1) pick v0 randomly
-// 2) pick v1 farthest from v0
-// 3) pick v2 farthest from both v0 & v1
-function pickFarthest3(poly) {
-  const n = poly.getPoints().getNumberOfPoints();
-  if(n<3) {
-    console.warn("Not enough vertices to pick 3 points!");
-    return [0,0,0];
-  }
-  // v0 => random
-  const v0 = Math.floor(Math.random()*n);
 
-  // find v1 => farthest from v0
-  let bestDist= -1, v1=0;
-  const tmp0 = [0,0,0];
-  poly.getPoints().getPoint(v0, tmp0);
-  const p0x=tmp0[0], p0y=tmp0[1], p0z=tmp0[2];
-  for(let i=0; i<n; i++){
-    poly.getPoints().getPoint(i, tmp0);
-    const dsq=euclidianDistSq(p0x,p0y,p0z, tmp0[0],tmp0[1],tmp0[2]);
-    if(dsq>bestDist){
-      bestDist=dsq;
-      v1=i;
-    }
-  }
-
-  // find v2 => farthest from either v0 or v1
-  // i.e. pick the vertex that has the largest minimal distance
-  // to the set {v0,v1}
-  const tmp1=[0,0,0];
-  poly.getPoints().getPoint(v1, tmp1);
-  const p1x=tmp1[0], p1y=tmp1[1], p1z=tmp1[2];
-  bestDist=-1; 
-  let v2=0;
-  for(let i=0; i<n; i++){
-    poly.getPoints().getPoint(i, tmp0);
-    const d0=euclidianDistSq(p0x,p0y,p0z, tmp0[0],tmp0[1],tmp0[2]);
-    const d1=euclidianDistSq(p1x,p1y,p1z, tmp0[0],tmp0[1],tmp0[2]);
-    // minimal distance to either v0 or v1
-    const minDist = Math.min(d0, d1);
-    if(minDist>bestDist){
-      bestDist=minDist;
-      v2=i;
-    }
-  }
-
-  return [v0, v1, v2];
-}
-
-// MAIN INIT
+// ------------- VTK Initialization -------------
 async function initViewers(){
   console.log("initViewers() called");
   showSpinner(true);
 
   try{
-    // A) Left viewer
+    // A) Create left VTK viewer
     leftView = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
       rootContainer: document.getElementById("vtkContainerLeft"),
       background:[0.2,0.2,0.2],
     });
-    rendererLeft= leftView.getRenderer();
-    renderWindowLeft= leftView.getRenderWindow();
+    rendererLeft = leftView.getRenderer();
+    renderWindowLeft = leftView.getRenderWindow();
 
-    // B) Right viewer
+    // B) Create right VTK viewer
     rightView= vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
       rootContainer: document.getElementById("vtkContainerRight"),
       background:[0.2,0.2,0.2],
@@ -219,7 +240,7 @@ async function initViewers(){
     // Share camera
     rendererRight.setActiveCamera(rendererLeft.getActiveCamera());
 
-    // Sync
+    // Sync interactions
     const syncRenders = ()=>{
       renderWindowLeft.render();
       renderWindowRight.render();
@@ -229,50 +250,98 @@ async function initViewers(){
     renderWindowRight.getInteractor().onStartAnimation(syncRenders);
     renderWindowRight.getInteractor().onEndAnimation(syncRenders);
 
-    // C) Mappers / Actors
-    const mapperLeft = vtk.Rendering.Core.vtkMapper.newInstance();
-    meshActorLeft= vtk.Rendering.Core.vtkActor.newInstance();
-    meshActorLeft.setMapper(mapperLeft);
+    // Now that we have viewers, enable dataset buttons
+    document.getElementById("data1Btn").disabled=false;
+    document.getElementById("data2Btn").disabled=false;
+    document.getElementById("data3Btn").disabled=false;
+    document.getElementById("data4Btn").disabled=false;
+    document.getElementById("data5Btn").disabled=false;
 
-    const mapperRight= vtk.Rendering.Core.vtkMapper.newInstance();
-    meshActorRight= vtk.Rendering.Core.vtkActor.newInstance();
-    meshActorRight.setMapper(mapperRight);
+    document.getElementById("infoBox").textContent =
+      "Viewers initialized! Choose a dataset to load.";
+    console.log("Initialization done, pick a dataset now.");
+  }
+  catch(err){
+    console.error("Error init viewers:", err);
+    alert("Error: "+err);
+  }
+  finally{
+    showSpinner(false);
+  }
+}
 
-    // surface mode, pickable
-    meshActorLeft.getProperty().setRepresentationToSurface();
-    meshActorLeft.getProperty().setBackfaceCulling(false);
-    meshActorLeft.getProperty().setFrontfaceCulling(false);
-    meshActorLeft.setPickable(true);
 
-    meshActorRight.getProperty().setRepresentationToSurface();
-    meshActorRight.getProperty().setBackfaceCulling(false);
-    meshActorRight.getProperty().setFrontfaceCulling(false);
-    meshActorRight.setPickable(true);
+// ------------- LOAD A SPECIFIC DATASET -------------
+async function loadDataset(index){
+  console.log("loadDataset() for file index:", index);
+  showSpinner(true);
 
-    // D) fetch JSON
-    const url="https://oothomas.github.io/assets/data/mesh_data_with_colors.json";
-    console.log("Fetching JSON from:", url);
-    const resp= await fetch(url);
+  try{
+    // 1) Remove old actors from the scene if any
+    if(meshActorLeft){
+      rendererLeft.removeActor(meshActorLeft);
+      meshActorLeft=null;
+    }
+    if(meshActorRight){
+      rendererRight.removeActor(meshActorRight);
+      meshActorRight=null;
+    }
+
+    // 2) Clear any old spheres
+    for(let actor of glyphActorsLeft){
+      rendererLeft.removeActor(actor);
+    }
+    glyphActorsLeft=[];
+    for(let actor of glyphActorsRight){
+      rendererRight.removeActor(actor);
+    }
+    glyphActorsRight=[];
+
+    // 3) The file we want
+    const filename = dataFiles[index];
+    const fullUrl = dataBaseUrl + filename;
+    console.log("Fetching data from:", fullUrl);
+
+    const resp = await fetch(fullUrl);
     if(!resp.ok){
       throw new Error("HTTP error: "+resp.status);
     }
-    const data=await resp.json();
+    const data = await resp.json();
 
-    // E) T12 array in data.vertexMapping
-    vertexMapping= data.vertexMapping; 
+    // 4) Get T12 array from data.vertexMapping
+    vertexMapping = data.vertexMapping || null;
     if(!vertexMapping){
-      console.warn("No vertexMapping in JSON => cannot map from mesh1->mesh2!");
+      console.warn("No vertexMapping found => can't map mesh1->mesh2");
     }
 
-    // F) build mesh1, mesh2
-    polyDataLeft= buildPolyData(
-      data.mesh1.vertices, data.mesh1.faces, data.mesh1.colors
+    // 5) Build polyDataLeft
+    polyDataLeft = buildPolyData(
+      data.mesh1.vertices,
+      data.mesh1.faces,
+      data.mesh1.colors
     );
-    polyDataRight= buildPolyData(
-      data.mesh2.vertices, data.mesh2.faces, data.mesh2.colors
+    // Build polyDataRight
+    polyDataRight = buildPolyData(
+      data.mesh2.vertices,
+      data.mesh2.faces,
+      data.mesh2.colors
     );
 
-    // G) set up mappers
+    // 6) Create mappers/actors
+    const mapperLeft = vtk.Rendering.Core.vtkMapper.newInstance();
+    meshActorLeft = vtk.Rendering.Core.vtkActor.newInstance();
+    meshActorLeft.setMapper(mapperLeft);
+    meshActorLeft.getProperty().setRepresentationToSurface();
+    meshActorLeft.getProperty().setBackfaceCulling(false);
+    meshActorLeft.getProperty().setFrontfaceCulling(false);
+
+    const mapperRight = vtk.Rendering.Core.vtkMapper.newInstance();
+    meshActorRight = vtk.Rendering.Core.vtkActor.newInstance();
+    meshActorRight.setMapper(mapperRight);
+    meshActorRight.getProperty().setRepresentationToSurface();
+    meshActorRight.getProperty().setBackfaceCulling(false);
+    meshActorRight.getProperty().setFrontfaceCulling(false);
+
     mapperLeft.setInputData(polyDataLeft);
     mapperLeft.setColorModeToDirectScalars();
     mapperLeft.setScalarModeToUsePointData();
@@ -283,22 +352,23 @@ async function initViewers(){
     mapperRight.setScalarModeToUsePointData();
     mapperRight.setInterpolateScalarsBeforeMapping(true);
 
-    // add actors
     rendererLeft.addActor(meshActorLeft);
     rendererRight.addActor(meshActorRight);
 
+    // 7) Reset cameras, re-render
     rendererLeft.resetCamera();
     rendererRight.resetCamera();
     renderWindowLeft.render();
     renderWindowRight.render();
 
-    document.getElementById("infoBox").textContent=
-      "Meshes + T12 loaded. Click 'Place 3 Farthest Points'!";
+    // 8) Enable "Place 3 Farthest Points" button
     document.getElementById("farthestBtn").disabled=false;
-    console.log("Done init, ready to place points!");
+    document.getElementById("infoBox").textContent =
+      "Loaded dataset: "+filename+" => Now click 'Place 3 Farthest Points'";
+    console.log("Successfully loaded dataset:", filename);
   }
   catch(err){
-    console.error("init error:", err);
+    console.error("Error loading dataset:", err);
     alert("Error: "+err);
   }
   finally{
@@ -306,12 +376,13 @@ async function initViewers(){
   }
 }
 
-// place 3 farthest points
-function placeFarthestPoints(){
-  console.log("Placing 3 random farthest points on Mesh1 + corresponding on Mesh2...");
 
-  // 1) remove old glyphs
-  for(let actor of glyphActorsLeft) {
+// ------------- PLACE 3 FARTHEST POINTS -------------
+function placeFarthestPoints(){
+  console.log("Placing 3 random farthest points in mesh1 => mapping to mesh2.");
+
+  // Remove old glyphs if any
+  for(let actor of glyphActorsLeft){
     rendererLeft.removeActor(actor);
   }
   glyphActorsLeft=[];
@@ -320,35 +391,40 @@ function placeFarthestPoints(){
   }
   glyphActorsRight=[];
 
-  // 2) pick the 3 farthest vertex indices in mesh1
   if(!polyDataLeft){
-    console.warn("No polyDataLeft loaded!");
+    console.warn("No polyDataLeft loaded => cannot place points!");
     return;
   }
+
+  // 1) pick 3 farthest vertex indices in mesh1
   const triple = pickFarthest3(polyDataLeft);
   console.log("Indices on mesh1 =>", triple);
 
-  // colors for the 3 points => [ Red, Green, Blue ]
+  // We color them [R, G, B]
   const colorArray = [
     [1,0,0],  // red
     [0,1,0],  // green
     [0,0,1],  // blue
   ];
 
-  // 3) For each of the 3 points in mesh1, place a sphere
   const pts1 = polyDataLeft.getPoints();
+  const pts2 = polyDataRight ? polyDataRight.getPoints() : null;
+
   for(let i=0; i<3; i++){
-    const idx = triple[i];
+    const idx= triple[i];
     const color = colorArray[i];
+
+    // Check valid
     if(idx<0 || idx>=pts1.getNumberOfPoints()){
-      console.warn("Invalid index on mesh1 =>", idx);
+      console.warn("Invalid index in mesh1 =>", idx);
       continue;
     }
-    const coord=[0,0,0];
+
+    // A) Place sphere in mesh1
+    const coord = [0,0,0];
     pts1.getPoint(idx, coord);
 
-    // place sphere on mesh1
-    const sphereSrc=vtk.Filters.Sources.vtkSphereSource.newInstance({
+    const sphereSrc= vtk.Filters.Sources.vtkSphereSource.newInstance({
       radius:0.02, thetaResolution:16, phiResolution:16
     });
     const sphereMap= vtk.Rendering.Core.vtkMapper.newInstance();
@@ -360,20 +436,19 @@ function placeFarthestPoints(){
     rendererLeft.addActor(actor);
     glyphActorsLeft.push(actor);
 
-    // map to mesh2 via vertexMapping
+    // B) if we have T12 => place sphere in mesh2
     if(!vertexMapping || idx>=vertexMapping.length){
-      console.warn("vertexMapping missing or index out-of-range => no sphere for mesh2");
+      console.warn("vertexMapping missing or out of range => no sphere in mesh2");
       continue;
     }
     const mesh2Idx= vertexMapping[idx];
-    console.log(`mesh1 vertex ${idx} => mesh2 vertex ${mesh2Idx}`);
-    if(mesh2Idx<0 || mesh2Idx>=polyDataRight.getPoints().getNumberOfPoints()){
-      console.warn("mesh2Idx out of range => no sphere for mesh2");
+    if(!pts2 || mesh2Idx<0 || mesh2Idx>=pts2.getNumberOfPoints()){
+      console.warn("mesh2 index out of range => no sphere in mesh2");
       continue;
     }
-    // place sphere on mesh2
+
     const coord2=[0,0,0];
-    polyDataRight.getPoints().getPoint(mesh2Idx, coord2);
+    pts2.getPoint(mesh2Idx, coord2);
 
     const sphereSrc2= vtk.Filters.Sources.vtkSphereSource.newInstance({
       radius:0.02, thetaResolution:16, phiResolution:16
@@ -386,50 +461,55 @@ function placeFarthestPoints(){
     actor2.setPosition(...coord2);
     rendererRight.addActor(actor2);
     glyphActorsRight.push(actor2);
+
+    console.log(`mesh1 vertex[${idx}] -> mesh2 vertex[${mesh2Idx}] => color:`, color);
   }
 
   renderWindowLeft.render();
   renderWindowRight.render();
-  console.log("Done placing 3 points on mesh1 + 3 on mesh2.");
+  console.log("Done placing 3 random farthest points on mesh1 => mapped points on mesh2.");
 }
 
-// pickFarthest3 => 3 "far-apart" vertices
+////////////////////////////////////////////////////////////////////////////////
+// Implementation of pickFarthest3 => naive approach to select 3 far-apart vertices
 function pickFarthest3(poly){
   const n = poly.getPoints().getNumberOfPoints();
   if(n<3){
-    console.warn("Mesh1 has fewer than 3 vertices => can't pick 3 farthest points!");
+    console.warn("Mesh has fewer than 3 vertices => can't pick 3 farthest points!");
     return [0,0,0];
   }
-
-  // step1: random v0
+  // Step1: random v0
   const v0 = Math.floor(Math.random()*n);
-  // step2: find v1 => farthest from v0
+
+  // Step2: find v1 => farthest from v0
   let best=-1, v1=0;
   const tmp0=[0,0,0], tmpX=[0,0,0];
   poly.getPoints().getPoint(v0, tmp0);
   for(let i=0; i<n; i++){
     poly.getPoints().getPoint(i, tmpX);
-    const d2= distSq(tmp0, tmpX);
-    if(d2>best){
-      best=d2; v1=i;
+    const dsq= distSq(tmp0, tmpX);
+    if(dsq>best){
+      best=dsq; v1=i;
     }
   }
 
-  // step3: find v2 => farthest from set {v0,v1}
-  let v2=0; best=-1;
+  // Step3: find v2 => farthest from {v0,v1}
+  best=-1;
+  let v2=0;
   const tmp1=[0,0,0];
   poly.getPoints().getPoint(v1, tmp1);
   for(let i=0; i<n; i++){
     poly.getPoints().getPoint(i, tmpX);
     const d0= distSq(tmp0, tmpX);
     const d1= distSq(tmp1, tmpX);
-    const minD = Math.min(d0,d1);
+    const minD= Math.min(d0, d1);
     if(minD>best){
       best= minD; v2=i;
     }
   }
   return [v0,v1,v2];
 }
+// distance^2
 function distSq(a,b){
   const dx=b[0]-a[0], dy=b[1]-a[1], dz=b[2]-a[2];
   return dx*dx + dy*dy + dz*dz;
