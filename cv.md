@@ -60,7 +60,7 @@ Computational anatomist and machine learning scientist with extensive experience
 - *Automated morphological phenotyping using learned shape descriptors and functional maps.* PLOS Computational Biology, 2023.  
 - *Leveraging Descriptor Learning and Functional Map-based Shape Matching for Automatic Landmark Acquisition.* Journal of Anatomy (In Press).
 
-(For a full list of publications and presentations, see [Projects](/projects/) and [Contact](/contact/) for inquiries.)
+(For a full list of publications and presentations, see the project highlights on the [home page](/) and use the contact details there for inquiries.)
 
 ---
 **Download Full CV:**  
