@@ -2,7 +2,6 @@
 layout: default
 title: "Home"
 ---
-
 <style>
 .nav-button {
   display: inline-flex;
@@ -35,9 +34,6 @@ title: "Home"
   <a href="/cv/" class="nav-button">CV</a>
   <a href="/#get-in-touch" class="nav-button">Get in Touch</a>
 </nav>
-
-# **Oshane O. Thomas, PhD**
-Seattle, WA | [LinkedIn](https://www.linkedin.com/in/oshane-o-thomas) | [GitHub](https://github.com/oothomas)
 
 <div style="display: flex; align-items: center;">
     <img src="assets/images/profile.jpg" alt="Oshane O. Thomas" style="width: 150px; border-radius: 8px; margin-right: 20px;">
