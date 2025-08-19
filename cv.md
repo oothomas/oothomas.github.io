@@ -6,12 +6,25 @@ permalink: /cv/
 
 <style>
 .nav-button {
-  padding: 10px 15px;
-  background-color: #007bff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  background-color: #2a63a4;
   color: #fff;
-  border-radius: 5px;
+  border-radius: 8px;
   text-decoration: none;
   font-size: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nav-button:hover {
+  background-color: #1d4f8c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 </style>
 
