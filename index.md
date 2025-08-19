@@ -3,8 +3,16 @@ layout: default
 title: "Home"
 ---
 
-# **Oshane O. Thomas, PhD**  
-Seattle, WA | [LinkedIn](https://www.linkedin.com/in/oshane-o-thomas) | [GitHub](https://github.com/oothomas)  
+<nav style="display: flex; justify-content: center; gap: 15px; margin: 20px 0; background-color: #f5f5f5; padding: 10px; border-radius: 8px;">
+  <a href="/#expertise-skills">Expertise & Skills</a>
+  <a href="/#career-highlights">Career Highlights</a>
+  <a href="/#projects">Projects</a>
+  <a href="/cv/">CV</a>
+  <a href="/#get-in-touch">Get in Touch</a>
+</nav>
+
+# **Oshane O. Thomas, PhD**
+Seattle, WA | [LinkedIn](https://www.linkedin.com/in/oshane-o-thomas) | [GitHub](https://github.com/oothomas)
 
 <div style="display: flex; align-items: center;">
     <img src="assets/images/profile.jpg" alt="Oshane O. Thomas" style="width: 150px; border-radius: 8px; margin-right: 20px;">
@@ -16,7 +24,7 @@ Seattle, WA | [LinkedIn](https://www.linkedin.com/in/oshane-o-thomas) | [GitHub]
 
 ---
 
-## **🛠️ Expertise & Skills**  
+<h2 id="expertise-skills">🛠️ Expertise & Skills</h2>
 
 ### AI & Computational Morphology
 Deep learning for biological shape analysis, automated landmarking, and morphospace visualization.
@@ -35,7 +43,7 @@ Experience collaborating across **biomechanics, evolutionary biology, and AI** t
 
 ---
 
-## **📄 Career Highlights**  
+<h2 id="career-highlights">📄 Career Highlights</h2>
 
 🔹 **Postdoctoral Fellow, Seattle Children's Research Institute**  
    - Developing AI-driven **morphometric analysis tools** to study biological shape variation.  
@@ -54,7 +62,7 @@ Experience collaborating across **biomechanics, evolutionary biology, and AI** t
 
 ---
 
-## **🚀 Featured Work**
+<h2 id="projects">🚀 Featured Work</h2>
 ### Interactive Morphospace Tool
 [Launch Roden Mandible Morphospace Viewer](assets/docs/projects/interactive_morphospace.html)
 
@@ -150,7 +158,7 @@ Experience collaborating across **biomechanics, evolutionary biology, and AI** t
 
 ---
 
-## **📩 Get in Touch**
+<h2 id="get-in-touch">📩 Get in Touch</h2>
 If you'd like to get in touch, please reach out via:
 - Email: [oothomas07@gmail.com](mailto:oothomas07@gmail.com)
 - LinkedIn: [Oshane O. Thomas](https://www.linkedin.com/in/oshane-o-thomas)

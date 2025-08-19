@@ -4,7 +4,15 @@ title: "Curriculum Vitae"
 permalink: /cv/
 ---
 
-# Oshane O. Thomas, PhD  
+<nav style="display: flex; justify-content: center; gap: 15px; margin: 20px 0; background-color: #f5f5f5; padding: 10px; border-radius: 8px;">
+  <a href="/#expertise-skills">Expertise & Skills</a>
+  <a href="/#career-highlights">Career Highlights</a>
+  <a href="/#projects">Projects</a>
+  <a href="/cv/">CV</a>
+  <a href="/#get-in-touch">Get in Touch</a>
+</nav>
+
+# Oshane O. Thomas, PhD
 Seattle, WA | [Gmail](mailto:oothomas07@gmail.com) | [LinkedIn](https://www.linkedin.com/in/oshane-o-thomas)
 
 ## Summary
