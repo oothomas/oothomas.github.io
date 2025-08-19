@@ -3,12 +3,47 @@ layout: default
 title: "Home"
 ---
 
-<nav style="display: flex; justify-content: center; gap: 15px; margin: 20px 0; background-color: #f5f5f5; padding: 10px; border-radius: 8px;">
-  <a href="/#expertise-skills">Expertise & Skills</a>
-  <a href="/#career-highlights">Career Highlights</a>
-  <a href="/#projects">Projects</a>
-  <a href="/cv/">CV</a>
-  <a href="/#get-in-touch">Get in Touch</a>
+<style>
+.navbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0;
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 12px;
+}
+
+.nav-button {
+  display: inline-block;
+  white-space: nowrap;
+  padding: 12px 24px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #007bff, #00d4ff);
+  text-decoration: none;
+  border-radius: 30px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nav-button:hover {
+  background: linear-gradient(135deg, #0056b3, #0092cc);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+</style>
+
+<nav class="navbar">
+  <a href="/" class="nav-button">Home</a>
+  <a href="/#expertise-skills" class="nav-button">Expertise & Skills</a>
+  <a href="/#career-highlights" class="nav-button">Career Highlights</a>
+  <a href="/#projects" class="nav-button">Projects</a>
+  <a href="/cv/" class="nav-button">CV</a>
+  <a href="/#get-in-touch" class="nav-button">Get in Touch</a>
 </nav>
 
 # **Oshane O. Thomas, PhD**
