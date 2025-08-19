@@ -27,7 +27,7 @@ title: "Home"
 }
 </style>
 
-<nav style="display: flex; justify-content: center; gap: 15px; margin: 20px 0; background-color: #f5f5f5; padding: 10px; border-radius: 8px;">
+<nav style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px 0; background-color: #f5f5f5; padding: 10px; border-radius: 8px;">
   <a href="/" class="nav-button">Home</a>
   <a href="/#expertise-skills" class="nav-button">Expertise & Skills</a>
   <a href="/#career-highlights" class="nav-button">Career Highlights</a>
