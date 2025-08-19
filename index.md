@@ -57,7 +57,7 @@ Experience collaborating across **biomechanics, evolutionary biology, and AI** t
 ## **🚀 Featured Work**  
 **Explore my projects, research, and open-source contributions:**  
 <div style="text-align: center; margin-top: 10px;">
-    <a href="/projects.md" style="
+    <a href="{{ "/projects/" | relative_url }}" style="
         background-color: #007BFF;
         color: white;
         padding: 12px 20px;
@@ -74,8 +74,7 @@ Experience collaborating across **biomechanics, evolutionary biology, and AI** t
 ---
 
 ## **📩 Get in Touch**
-📧 [oothomas07@gmail.com](mailto:oothomas07@gmail.com)  
-🔗 Connect on **[LinkedIn](https://www.linkedin.com/in/oshane-o-thomas)**  
-📂 Explore my **[Publications](publications/)** and **[Tools](tools/)**  
+📧 [oothomas07@gmail.com](mailto:oothomas07@gmail.com)
+🔗 Connect on **[LinkedIn](https://www.linkedin.com/in/oshane-o-thomas)**
 
 ---
