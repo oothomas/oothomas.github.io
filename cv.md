@@ -4,12 +4,24 @@ title: "Curriculum Vitae"
 permalink: /cv/
 ---
 
+<style>
+.nav-button {
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: #fff;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 18px;
+}
+</style>
+
 <nav style="display: flex; justify-content: center; gap: 15px; margin: 20px 0; background-color: #f5f5f5; padding: 10px; border-radius: 8px;">
-  <a href="/#expertise-skills">Expertise & Skills</a>
-  <a href="/#career-highlights">Career Highlights</a>
-  <a href="/#projects">Projects</a>
-  <a href="/cv/">CV</a>
-  <a href="/#get-in-touch">Get in Touch</a>
+  <a href="/" class="nav-button">Home</a>
+  <a href="/#expertise-skills" class="nav-button">Expertise & Skills</a>
+  <a href="/#career-highlights" class="nav-button">Career Highlights</a>
+  <a href="/#projects" class="nav-button">Projects</a>
+  <a href="/cv/" class="nav-button">CV</a>
+  <a href="/#get-in-touch" class="nav-button">Get in Touch</a>
 </nav>
 
 # Oshane O. Thomas, PhD
