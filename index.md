@@ -2,7 +2,16 @@
 layout: default
 title: "Home"
 ---
+
+<!-- GLightbox (no jQuery required) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css">
+<script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
+
+<!-- Project gallery styles -->
+<link rel="stylesheet" href="{{ '/assets/css/projects.css' | relative_url }}">
+
 <style>
+/* keep your existing nav button style */
 .nav-button {
   display: inline-flex;
   align-items: center;
@@ -18,7 +27,6 @@ title: "Home"
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
-
 .nav-button:hover {
   background-color: #1d4f8c;
   transform: translateY(-2px);
@@ -26,22 +34,22 @@ title: "Home"
 }
 </style>
 
-<nav style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px 0; background-color: #f5f5f5; padding: 10px; border-radius: 8px;">
+<nav style="display:flex;flex-wrap:wrap;justify-content:center;gap:15px;margin:20px 0;background:#f5f5f5;padding:10px;border-radius:8px;">
   <a href="/" class="nav-button">Home</a>
   <a href="/#projects" class="nav-button">Projects</a>
   <a href="/#skills-and-expertise" class="nav-button">Skills and Expertise</a>
   <a href="/#cv" class="nav-button">CV</a>
 </nav>
 
-<div style="display: flex; align-items: center;">
-    <img src="assets/images/profile.jpg" alt="Oshane O. Thomas" style="width: 150px; border-radius: 8px; margin-right: 20px;">
-    <div style="font-size: 18px;">
-        I am a computational biologist and machine learning researcher specializing in biological shape analysis, AI-powered phenotyping, and functional morphology.  
-        My expertise bridges academic research and industry applications, leveraging deep learning and 3D data processing to extract meaningful insights from morphological datasets.  
-    </div>
+<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+  <img src="{{ 'assets/images/profile.jpg' | relative_url }}" alt="Oshane O. Thomas" style="width:150px;border-radius:8px;">
+  <div style="font-size:18px;max-width:700px;">
+    I am a computational biologist and machine learning researcher specializing in biological shape analysis, AI-powered phenotyping, and functional morphology.
+    My expertise bridges academic research and industry applications, leveraging deep learning and 3D data processing to extract meaningful insights from morphological datasets.
+  </div>
 </div>
 
----
+<hr>
 
 <h2 id="skills-and-expertise">🛠️ Skills and Expertise</h2>
 
@@ -60,98 +68,63 @@ Developer of **3D Slicer extensions** and open-source tools for biological and m
 ### Interdisciplinary Research & Leadership
 Experience collaborating across **biomechanics, evolutionary biology, and AI** to develop cutting-edge solutions.
 
----
+<hr>
 
 <h2 id="projects">🚀 Featured Work</h2>
-### Interactive Morphospace Tool
-[Launch Roden Mandible Morphospace Viewer](assets/docs/projects/interactive_morphospace.html)
 
-### SSC-MorphVQ for Landmark Placement
-![Project Image](/assets/images/projects/ssc-morphvq.png "A schematic of the MorphVQ pipeline showing two input shapes, S1 and S2, each processed through a Siamese DiffusionNet to produce shape descriptors. These descriptors are projected onto eigenbases and passed into functional map estimation modules, including a main branch and a complex functional map branch. The figure highlights the integration of spectral and spatial cycle consistency and a regularization block, resulting in multiple functional map outputs and a combined loss function.")
-*Adapted from Thomas & Maga "Leveraging Descriptor Learning and Functional Map-based Shape Matching for Automatic Landmark Acquisition" (In Press, Journal of Anatomy), this figure illustrates the enhanced MorphVQ pipeline for automatic landmark acquisition. It integrates Siamese DiffusionNet-based descriptor learning with functional map estimation and cycle consistency modules, streamlining the mapping of complex 3D shapes and improving both accuracy and efficiency in identifying morphological landmarks.*
+<!-- Projects grid (from _data/projects.yml) -->
+<div class="projects-grid">
+{% raw %}{% for proj in site.data.projects %}{% endraw %}
+  <article class="project-card">
+    <h3 class="project-title">{{ proj.title }}</h3>
 
-**Description:** Developed a Spatially and Spectrally Consistent MorphVQ model to enhance automatic landmark acquisition in complex biological shapes.
-**Practical Application:** Improves accuracy and reproducibility in morphometric analyses, enabling researchers to handle large-scale anatomical datasets with minimal manual intervention.
-**Outcomes:**
-- Reduced manual landmarking time by ~50%.
-- Improved landmark placement accuracy across diverse taxa.
-**Links:**
-- [GitHub Repository](https://github.com/oothomas/SSC-MorphVQ)
+    <div class="project-thumbs">
+      {% raw %}{% assign gallery_id = 'proj-' | append: forloop.index %}{% endraw %}
+      {% raw %}{% for img in proj.images %}{% endraw %}
+        <a href="{{ img.full | relative_url }}"
+           class="glightbox"
+           data-gallery="{{ gallery_id }}"
+           data-title="{{ img.caption | escape }}">
+          <figure class="thumb">
+            <img src="{{ img.thumb | relative_url }}" alt="{{ img.alt | default: img.caption }}">
+            <figcaption class="thumb-caption">{{ img.caption }}</figcaption>
+          </figure>
+        </a>
+      {% raw %}{% endfor %}{% endraw %}
+    </div>
 
----
+    <div class="project-body">
+      <!-- Use markdownify so multi-paragraph YAML descriptions render nicely -->
+      <div class="project-desc">{{ proj.description | markdownify }}</div>
 
-### SlicerMorph Modules and 3D Slicer Extensions
-![Project Image](# "Optional alt text for accessibility")
-*Brief visual description, e.g. "Screenshot of SlicerMorph modules streamlining micro-CT data processing."*
+      <!-- Optional quick links -->
+      <div class="project-links">
+        {% raw %}{% if proj.paper_url %}<a class="btn-sm" href="{{ proj.paper_url }}" target="_blank" rel="noopener">Publication</a>{% endif %}{% endraw %}
+        {% raw %}{% if proj.repo_url %}<a class="btn-sm" href="{{ proj.repo_url }}" target="_blank" rel="noopener">GitHub</a>{% endif %}{% endraw %}
+        {% raw %}{% if proj.demo_url %}<a class="btn-sm" href="{{ proj.demo_url }}" target="_blank" rel="noopener">Demo</a>{% endif %}{% endraw %}
+      </div>
 
-**Description:** Created and refined a suite of 3D Slicer extensions (MorphoSourceImport, HiResScreenCapture, SkyscanReconImport, SlicerScriptEditor) to streamline micro-CT data processing and visualization.
-**Practical Application:** Enables automated workflows and direct MorphoSource integration, beneficial for large-scale morphological research and clinical imaging analyses.
-**Outcomes:**
-- Reduced data processing time with automated steps.
-- Publication-quality visualizations for complex 3D data.
-**Links:**
-- [MorphoSourceImport Tutorial](https://github.com/SlicerMorph/Tutorials/tree/main/MorphoSourceImport) | [GitHub](https://github.com/SlicerMorph/SlicerMorph/tree/master/MorphoSourceImport)
-- [HiResScreenCapture Tutorial](https://github.com/SlicerMorph/Tutorials/tree/main/HiResScreenCapture) | [GitHub](https://github.com/SlicerMorph/SlicerMorph/tree/master/HiResScreenCapture)
-- [SkyscanReconImport Tutorial](https://github.com/SlicerMorph/Tutorials/tree/main/SkyscanReconImport) | [GitHub](https://github.com/SlicerMorph/SlicerMorph/tree/master/SkyscanReconImport)
-- [SlicerScriptEditor Tutorial](https://github.com/SlicerMorph/Tutorials/tree/main/ScriptEditor) | [GitHub](https://github.com/SlicerMorph/SlicerScriptEditor)
+      <!-- If you keep a full citation as a string -->
+      {% raw %}{% if proj.publication %}<p class="project-citation">{{ proj.publication }}</p>{% endif %}{% endraw %}
+    </div>
+  </article>
+{% raw %}{% endfor %}{% endraw %}
+</div>
 
----
-
-### Mouse Embryo micro-CT Image Segmentation with SWIN Transformer
-![Project Image](# "Optional alt text for accessibility")
-*Brief visual description, e.g. "Segmented 3D model of a mouse embryo highlighting tissue boundaries."*
-
-**Description:** Developed a SWIN UNETR-based segmentation pipeline pretrained on micro-CT data, achieving high accuracy in tissue labeling.
-**Practical Application:** Reduces manual segmentation effort, aiding developmental biology and genetics research.
-**Outcomes:**
-- State-of-the-art segmentation accuracy with fewer training samples.
-- Scalable to large embryo imaging datasets.
-**Links:**
-- [GitHub Repository](#)
-
----
-
-### Explainable GaitViT: A Transformer-based Classifier for Gait Analysis
-![Project Image](# "Optional alt text for accessibility")
-*Brief visual description, e.g. "Visual representation of gait cycle phases used in the gait classification model."*
-
-**Description:** Built a transformer-based gait classifier that balances accuracy and explainability.
-**Practical Application:** Useful for clinical diagnostics, rehabilitation, and sports science by providing interpretable joint kinematics analysis.
-**Outcomes:**
-- High classification accuracy on complex locomotor datasets.
-- Enhanced interpretability via gradient-weighted relevance propagation.
-**Links:**
-- [GitHub Repository](https://github.com/oothomas/Explainable-GaitViT)
-
----
-
-### morphVQ: Deep Learning Pipeline for Morphological Phenotyping
-![Project Image](# "Optional alt text for accessibility")
-*Brief visual description, e.g. "3D rendering of bone shape variations captured by the morphVQ pipeline."*
-
-**Description:** Created a deep learning pipeline for quantifying bone shape and size across diverse anatomical collections.
-**Practical Application:** Streamlines phenotype characterization in evolutionary biology, comparative morphology, and medical imaging.
-**Outcomes:**
-- Improved reproducibility and scalability for large morphological datasets.
-- Integration with functional maps for richer shape descriptors.
-**Links:**
-- [GitHub Repository](https://github.com/oothomas/morphVQ)
-
----
-
-### HindSight-VAE: Recurrent VAE for Human Motion Analysis
-![Project Image](# "Optional alt text for accessibility")
-*Brief visual description, e.g. "Graphical representation of motion sequences learned by the VAE model."*
-
-**Description:** Designed a Variational Autoencoder with Autoregressive Flow for analyzing variable-length human motion sequences.
-**Practical Application:** Supports clinical gait analysis, sports performance, and ergonomic assessments by capturing subtle motion differences.
-**Outcomes:**
-- High accuracy in movement classification and subject identification.
-- Demonstrated at AABA 2020, showing feasibility for large-scale biomechanical data analyses.
-**Links:**
-- [GitHub Repository](https://github.com/oothomas/HindSight-VAE)
-
----
+<hr>
 
 <h2 id="cv">📄 Curriculum Vitae</h2>
-<p><a href="/assets/docs/Thomas_Oshane_CV.pdf" class="nav-button">Download Full CV (PDF)</a></p>
+<p><a href="{{ '/assets/docs/Thomas_Oshane_CV.pdf' | relative_url }}" class="nav-button">Download Full CV (PDF)</a></p>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  GLightbox({
+    selector: '.glightbox',
+    touchNavigation: true,
+    loop: true,
+    openEffect: 'zoom',
+    closeEffect: 'zoom',
+    zoomable: false
+  });
+});
+</script>
