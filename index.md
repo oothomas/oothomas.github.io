@@ -28,11 +28,9 @@ title: "Home"
 
 <nav style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px 0; background-color: #f5f5f5; padding: 10px; border-radius: 8px;">
   <a href="/" class="nav-button">Home</a>
-  <a href="/#expertise-skills" class="nav-button">Expertise & Skills</a>
-  <a href="/#career-highlights" class="nav-button">Career Highlights</a>
   <a href="/#projects" class="nav-button">Projects</a>
-  <a href="/cv/" class="nav-button">CV</a>
-  <a href="/#get-in-touch" class="nav-button">Get in Touch</a>
+  <a href="/#skills-and-expertise" class="nav-button">Skills and Expertise</a>
+  <a href="/#cv" class="nav-button">CV</a>
 </nav>
 
 <div style="display: flex; align-items: center;">
@@ -45,7 +43,7 @@ title: "Home"
 
 ---
 
-<h2 id="expertise-skills">🛠️ Expertise & Skills</h2>
+<h2 id="skills-and-expertise">🛠️ Skills and Expertise</h2>
 
 ### AI & Computational Morphology
 Deep learning for biological shape analysis, automated landmarking, and morphospace visualization.
@@ -61,25 +59,6 @@ Developer of **3D Slicer extensions** and open-source tools for biological and m
 
 ### Interdisciplinary Research & Leadership
 Experience collaborating across **biomechanics, evolutionary biology, and AI** to develop cutting-edge solutions.
-
----
-
-<h2 id="career-highlights">📄 Career Highlights</h2>
-
-🔹 **Postdoctoral Fellow, Seattle Children's Research Institute**  
-   - Developing AI-driven **morphometric analysis tools** to study biological shape variation.  
-   - Creating **automated pipelines for 3D shape processing** in biomedical imaging.  
-   - Leading **SlicerMorph training sessions** to advance the adoption of computational shape analysis.  
-
-🔹 **Research in AI & Shape Analysis**  
-   - **Published in PLOS Computational Biology & Journal of Anatomy.**  
-   - Developed **novel deep learning frameworks** for shape-based phenotyping.  
-   - Applied **functional map-based methods** to automate biological morphology studies.  
-
-🔹 **Machine Learning & Data Science**  
-   - **Developed Explainable GaitViT**, a Transformer-based gait classification model.  
-   - Created **morphVQ**, an AI pipeline for automated shape matching.  
-   - Built **micro-CT segmentation models** for biomedical research.  
 
 ---
 
@@ -174,14 +153,5 @@ Experience collaborating across **biomechanics, evolutionary biology, and AI** t
 
 ---
 
-**Additional Resources:**
-- For a comprehensive view of my background, see my [Curriculum Vitae](/cv/).
-
----
-
-<h2 id="get-in-touch">📩 Get in Touch</h2>
-If you'd like to get in touch, please reach out via:
-- Email: [oothomas07@gmail.com](mailto:oothomas07@gmail.com)
-- LinkedIn: [Oshane O. Thomas](https://www.linkedin.com/in/oshane-o-thomas)
-
----
+<h2 id="cv">📄 Curriculum Vitae</h2>
+<p><a href="/assets/docs/Thomas_Oshane_CV.pdf" class="nav-button">Download Full CV (PDF)</a></p>
