@@ -71,11 +71,11 @@ Developer of **3D Slicer extensions** and open-source tools for biological and m
 ### Interdisciplinary Research & Leadership
 Experience collaborating across **biomechanics, evolutionary biology, and AI** to develop cutting-edge solutions.
 
-<hr>
+<!-- removed the <hr> that used to sit here to eliminate the white line above Projects -->
 
 <h2 id="projects">🚀 Featured Work</h2>
 
-<!-- Full-bleed wrapper so the projects area can be wider than the theme’s narrow column -->
+<!-- Full-bleed wrapper, now narrowed so it doesn't overshoot on the right -->
 <section class="projects-fullbleed">
   <div class="projects-container">
     {% include projects.html %}
