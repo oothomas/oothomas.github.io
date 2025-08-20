@@ -60,8 +60,16 @@ title: "Home"
 <!-- no <hr> here to avoid the white line above Projects -->
 
 <h2 id="skills-and-expertise">🛠️ Skills and Expertise</h2>
+
+<!-- Introductory Focus/Throughline Highlight -->
+<div class="focus-box">
+  <p><strong>Focus:</strong> Medical image analysis (CT/MRI/X‑ray, micro‑CT) and 3D computer vision — from dataset curation to deployed models.</p>
+  <p><strong>Throughline:</strong> Ship interpretable, reproducible systems for segmentation, classification, detection, registration, and landmarking on volumetric data.</p>
+</div>
+
 <!-- Tech Stack as an icon list -->
 <div class="tech-stack">
+  <h3>Tech stack at a glance:</h3>
   <ul class="tech-list">
     <li><i class="devicon-python-plain colored"></i> Python</li>
     <li><i class="devicon-pytorch-original colored"></i> PyTorch</li>
