@@ -42,7 +42,7 @@
       alt: "Functional-map pipeline diagram"  # optional
     - thumb: "assets/images/projects/autolandmarkfm-landmarks-thumb.png"
       full:  "assets/images/projects/autolandmarkfm-landmarks-full.png"
-      caption: "Mandibular landmarks (13 points) shown in lateral, dorsal, and medial views; used for quantitative evaluation and visual assessment of automated placements."
+      caption: "FMAP's estimates (green) closely align with both MALPACA's (red) and the ground truth (blue), with deviations within expected human error. The model effectively estimates landmarks on 3D anatomical structures, advancing morphometric analysis by integrating geometry processing and deep-learning techniques."
 
 - title: "morphVQ: Functional-Map Morphometrics for Automated Phenotyping"
   description: >
