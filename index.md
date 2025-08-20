@@ -3,7 +3,7 @@ layout: default
 title: "Home"
 ---
 
-<!-- GLightbox (dependency-free lightbox for the project images) -->
+<!-- GLightbox (dependency-free lightbox for project images) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css">
 <script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
 
@@ -11,7 +11,7 @@ title: "Home"
 <link rel="stylesheet" href="{{ '/assets/css/projects.css' | relative_url }}">
 
 <style>
-/* Nav buttons (yours, kept intact) */
+/* Nav buttons (kept from your version) */
 .nav-button {
   display: inline-flex;
   align-items: center;
@@ -75,7 +75,12 @@ Experience collaborating across **biomechanics, evolutionary biology, and AI** t
 
 <h2 id="projects">🚀 Featured Work</h2>
 
-{% include projects.html %}
+<!-- Full-bleed wrapper so the projects area can be wider than the theme’s narrow column -->
+<section class="projects-fullbleed">
+  <div class="projects-container">
+    {% include projects.html %}
+  </div>
+</section>
 
 <hr>
 
