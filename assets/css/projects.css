@@ -32,8 +32,8 @@ hr:has(+ h2#projects) { display: none; }
 
 /* ========= STACK PROJECTS (one per row) ========= */
 .projects-grid {
-  display: grid;
-  grid-template-columns: 1fr;   /* <— force single column layout */
+  display: flex;
+  flex-direction: column;       /* stack cards in a single column */
   gap: 32px;                    /* spacing between stacked cards */
   margin-top: 12px;
   width: 100%;
@@ -41,6 +41,7 @@ hr:has(+ h2#projects) { display: none; }
 
 /* Card */
 .project-card {
+  width: 100%;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 14px;
