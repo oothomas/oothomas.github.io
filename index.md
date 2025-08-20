@@ -62,9 +62,15 @@ title: "Home"
 <h2 id="skills-and-expertise">🛠️ Skills and Expertise</h2>
 <!-- Introductory Focus/Throughline Highlight -->
 <div class="focus-box">
-  <p><strong>Focus:</strong> Medical image analysis (CT/MRI/X‑ray, micro‑CT) and 3D computer vision — from dataset curation to deployed models.</p>
-  <p><strong>Throughline:</strong> Ship interpretable, reproducible systems for segmentation, classification, detection, registration, and landmarking on volumetric data.</p>
+  <p class="focus-text"><strong>Focus:</strong> Medical image analysis (CT/MRI/X-ray, micro-CT) and 3D computer vision — from dataset curation to deployed models.</p>
 </div>
+
+<style>
+.focus-text {
+  font-size: 1.5rem;   /* larger than normal text */
+  line-height: 1.6;    /* improves readability */
+}
+</style>
 <!-- Tech Stack as an icon list -->
 <div class="tech-stack">
   <h3>Tech stack at a glance:</h3>
