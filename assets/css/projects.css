@@ -14,8 +14,8 @@
   --shadow-md: 0 4px 10px rgba(0,0,0,0.12);
 
   /* Quick knobs */
-  --thumb-gap: 16px;        /* visual gap between thumbs */
-  --thumb-aspect: 16 / 10;  /* 16:10 keeps height moderate; change to 16/9 for even shorter */
+  --thumb-gap: 14px;        /* space between thumbs */
+  --thumb-aspect: 16 / 10;  /* set 16/9 for even shorter thumbs */
 }
 
 /* ---------- Remove any theme line above the Projects heading ---------- */
@@ -64,15 +64,17 @@ hr:has(+ h2#projects) { display: none; }
   color: var(--accent);
 }
 
-/* ---------- Thumbnails row: smaller, centered, two-up ---------- */
+/* ---------- Thumbnails row: smaller, left-aligned, two-up ---------- */
 .project-thumbs {
   display: grid;
-  /* two columns; each is half minus half the gap => total fits 100% */
-  grid-template-columns: calc(50% - 8px) calc(50% - 8px);
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* always two columns */
   gap: var(--thumb-gap);
-  margin: 0 auto 12px auto;
-  max-width: 760px;        /* << smaller overall thumb row */
-  width: 100%;
+  /* keep this row comfortably inside the card on any width */
+  max-width: min(680px, calc(100% - 24px));
+  padding: 0 8px;                 /* inner breathing room */
+  margin-left: 0;                 /* left-aligned */
+  margin-right: auto;             /* prevents touching right edge */
+  margin-bottom: 12px;
   align-items: start;
 }
 .project-thumbs a { display: block; width: 100%; }
@@ -161,6 +163,7 @@ a:focus .thumb .thumb-caption { opacity: 1; }
   .project-thumbs {
     max-width: none;
     grid-template-columns: 1fr;
+    padding: 0;       /* let them be full width on mobile */
   }
 }
 @media (max-width: 420px) {
