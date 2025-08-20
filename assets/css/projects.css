@@ -1,87 +1,117 @@
-/* Palette tuned to GitHub Pages Modernist + your existing blue */
+/* =========================================================
+   Projects Gallery Styles (GitHub Pages – Modernist theme)
+   ========================================================= */
+
+/* Color system tuned to your palette */
 :root {
   --accent: #2a63a4;
-  --text: #222;
-  --muted: #666;
+  --accent-hover: #1d4f8c;
   --card-bg: #ffffff;
   --card-border: #e6e6e6;
+  --text: #222;
+  --muted: #666;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 10px rgba(0,0,0,0.12);
 }
 
-/* Projects grid */
+/* ---------- Grid ---------- */
+
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
+  /* auto-fit collapses empty columns so single cards stretch full width */
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 24px;
   margin-top: 12px;
+  width: 100%;
 }
 
-/* Project card */
+/* ---------- Card ---------- */
+
 .project-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 16px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+
+.project-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .project-title {
   margin: 0 0 10px 0;
   font-size: 1.15rem;
+  line-height: 1.25;
   color: var(--accent);
 }
 
-/* Thumbnails row */
+/* ---------- Thumbnails row ---------- */
+
 .project-thumbs {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
-/* Thumbnail with hover overlay caption */
+/* Each thumbnail is a responsive box with consistent aspect ratio */
 .thumb {
   position: relative;
   overflow: hidden;
   border-radius: 10px;
-  margin: 0;
   border: 1px solid var(--card-border);
+  background: #f3f6fa;
+  aspect-ratio: 16 / 10; /* keeps a tidy, consistent shape */
+  width: clamp(260px, 40vw, 480px);
+  max-width: 100%;
 }
 
 .thumb img {
   display: block;
-  width: 280px;
-  height: 170px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   transition: transform .25s ease;
 }
 
-.thumb:hover img {
+.thumb:hover img,
+a:focus .thumb img {
   transform: scale(1.04);
 }
 
+/* Hover/focus caption overlay */
 .thumb-caption {
   position: absolute;
   left: 0; right: 0; bottom: 0;
   padding: 6px 10px;
-  font-size: 0.85rem;
+  font-size: 0.86rem;
   line-height: 1.25;
   color: #fff;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0,0,0,0.48);
   backdrop-filter: blur(2px);
   opacity: 0;
-  transition: opacity .25s ease;
+  transition: opacity .2s ease;
+  pointer-events: none;
 }
 
-.thumb:hover .thumb-caption {
+.thumb:hover .thumb-caption,
+a:focus .thumb .thumb-caption {
   opacity: 1;
 }
 
-/* Description / links */
+/* ---------- Body / description / links ---------- */
+
 .project-body { margin-top: 6px; }
 
-.project-desc p { 
-  margin: 0 0 8px 0;
+.project-desc {
   color: var(--text);
+}
+
+.project-desc p {
+  margin: 0 0 10px 0;
 }
 
 .project-links {
@@ -91,31 +121,72 @@
   margin: 6px 0 2px 0;
 }
 
+/* Small action buttons */
 .btn-sm {
   display: inline-block;
   padding: 6px 10px;
   background: var(--accent);
-  color: #fff;
+  color: #fff !important;
   border-radius: 6px;
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
   transition: transform .15s ease, box-shadow .15s ease, background .2s ease;
 }
 
-.btn-sm:hover {
-  background: #1d4f8c;
+.btn-sm:hover,
+.btn-sm:focus {
+  background: var(--accent-hover);
   transform: translateY(-1px);
   box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+  outline: none;
+}
+
+.btn-sm:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .project-citation {
   margin: 6px 0 0 0;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   color: var(--muted);
+  line-height: 1.35;
 }
 
-/* Small screens: thumbnails size down */
+/* ---------- Responsiveness ---------- */
+
 @media (max-width: 420px) {
-  .thumb img { width: 100%; height: 160px; }
+  .projects-grid {
+    gap: 18px;
+  }
+  .thumb {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+  }
+}
+
+/* ---------- Accessibility / Motion preferences ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .project-card,
+  .thumb img,
+  .thumb-caption,
+  .btn-sm {
+    transition: none !important;
+  }
+}
+
+/* ---------- Optional: light/dark adjustment (gentle) ---------- */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --card-bg: #111418;
+    --card-border: #29313a;
+    --text: #e6e6e6;
+    --muted: #a8b0ba;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.6);
+    --shadow-md: 0 6px 16px rgba(0,0,0,0.7);
+  }
+  .thumb { background: #0e1216; }
 }
