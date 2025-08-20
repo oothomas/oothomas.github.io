@@ -32,7 +32,7 @@
 .skill-card h3 {
   margin-top: 0;
   margin-bottom: 0.5rem;
-  color: #25589a;
+  color: #25589a !important;
 }
 .skill-card ul {
   margin: 0;
