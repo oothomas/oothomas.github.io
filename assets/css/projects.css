@@ -15,32 +15,28 @@
 }
 
 /* -------- Full-bleed container for the Projects section -------- */
-/* Breaks out of Modernist's narrow content column ONLY here */
+/* Breaks out of Modernist's narrow content column ONLY here,
+   but keeps a narrower inner max-width so it doesn't hang off. */
 .projects-fullbleed {
   width: 100vw;
-  position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
   background: transparent;
+  overflow-x: clip; /* prevents tiny overflow due to scrollbar/vw math */
 }
 
 .projects-fullbleed .projects-container {
-  max-width: 1200px;   /* adjust to 1100–1400px if you want */
+  /* Narrowed from 1200px to 1000px so it doesn't overshoot on the right */
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 0 16px;     /* viewport padding */
+  padding: 0 16px; /* viewport padding */
 }
-
-/* If you ever see horizontal scrollbars on some browsers, you can also:
-html, body { overflow-x: clip; }
-*/
 
 /* ---------- Grid ---------- */
 
 .projects-grid {
   display: grid;
-  /* auto-fit collapses empty columns so single cards stretch full width */
+  /* auto-fit collapses empty columns so single cards stretch within container */
   grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: 24px;
   margin-top: 12px;
