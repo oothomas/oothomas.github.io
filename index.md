@@ -10,6 +10,11 @@ title: "Home"
 <!-- Project gallery styles -->
 <link rel="stylesheet" href="{{ '/assets/css/projects.css' | relative_url }}">
 
+<!-- Icon libraries and skills styling -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.15.1/devicon.min.css">
+<link rel="stylesheet" href="{{ '/assets/css/skills.css' | relative_url }}">
+
 <style>
 /* Nav buttons (kept from your version) */
 .nav-button {
@@ -56,20 +61,89 @@ title: "Home"
 
 <h2 id="skills-and-expertise">🛠️ Skills and Expertise</h2>
 
-### AI & Computational Morphology
-Deep learning for biological shape analysis, automated landmarking, and morphospace visualization.
+<!-- Introductory Focus/Throughline Highlight -->
+<div class="focus-box">
+  <p><strong>Focus:</strong> Medical image analysis (CT/MRI/X‑ray, micro‑CT) and 3D computer vision — from dataset curation to deployed models.</p>
+  <p><strong>Throughline:</strong> Ship interpretable, reproducible systems for segmentation, classification, detection, registration, and landmarking on volumetric data.</p>
+</div>
 
-### 3D Data Processing & Visualization
-Advanced geometric morphometrics, micro-CT data segmentation, functional shape analysis.
+<!-- Responsive grid of skill cards -->
+<div class="skills-grid">
+  <!-- Card 1: Modalities & Data Ops -->
+  <div class="skill-card">
+    <div class="card-icon"><i class="fa-solid fa-database"></i></div>
+    <h3>Modalities &amp; Data Ops</h3>
+    <ul>
+      <li><strong>Formats &amp; ecosystems:</strong> DICOM, NIfTI; whole‑embryo diceCT; surface meshes (OBJ/PLY).</li>
+      <li><strong>Pipelines:</strong> end‑to‑end data loaders, artifact/version tracking, automated reports for accuracy &amp; calibration.</li>
+    </ul>
+  </div>
 
-### Machine Learning & AI
-Transformer-based classification, generative AI, functional map-based shape matching.
+  <!-- Card 2: CV/ML Tasks & XAI -->
+  <div class="skill-card">
+    <div class="card-icon"><i class="fa-solid fa-brain"></i></div>
+    <h3>CV/ML Tasks/Algorithms &amp; XAI</h3>
+    <ul>
+      <li><strong>Core tasks:</strong> 3D segmentation, classification, anomaly detection, and <em>automatic landmarking</em>.</li>
+      <li><strong>Architectures:</strong> Vision Transformers, SwinUNETR, 3D U‑Net/UNet++, geometric deep learning (functional maps, DiffusionNet), mesh autoencoders.</li>
+      <li><strong>Techniques:</strong> Integrated Gradients, Layerwise Relevance Propagation.</li>
+    </ul>
+  </div>
 
-### Software Development & Tooling
-Developer of **3D Slicer extensions** and open-source tools for biological and medical imaging research.
+  <!-- Card 3: Tooling & Platforms -->
+  <div class="skill-card">
+    <div class="card-icon"><i class="fa-solid fa-toolbox"></i></div>
+    <h3>Tooling &amp; Platforms</h3>
+    <ul>
+      <li><strong>Med-imaging &amp; 3D:</strong> 3D Slicer/SlicerMorph, VTK/ITK, OpenCV, trimesh.</li>
+      <li><strong>Photogrammetry:</strong> OpenDroneMap (NodeODM).</li>
+      <li><strong>Programming:</strong> Python, R/Rcpp, C/C++, SQL; PyTorch, PyTorch-Geometric, TensorFlow/Keras; scikit-learn, pandas, NumPy, statsmodels.</li>
+    </ul>
+  </div>
 
-### Interdisciplinary Research & Leadership
-Experience collaborating across **biomechanics, evolutionary biology, and AI** to develop cutting-edge solutions.
+  <!-- Card 4: MLOps & Reproducibility -->
+  <div class="skill-card">
+    <div class="card-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
+    <h3>MLOps &amp; Reproducibility</h3>
+    <ul>
+      <li><strong>Stack:</strong> Docker, MLflow, WandB, Git/GitHub Actions; AWS/Azure/GCP for GPU training &amp; inference.</li>
+      <li><strong>Practices:</strong> experiment tracking, artifact versioning, config-as-code, CI for data/metrics drift, model cards.</li>
+    </ul>
+  </div>
+
+  <!-- Card 5: Open-Source & Extensions -->
+  <div class="skill-card">
+    <div class="card-icon"><i class="fa-solid fa-code-branch"></i></div>
+    <h3>Open‑Source &amp; Extensions</h3>
+    <ul>
+      <li><strong>SlicerPhotogrammetry</strong> (SAM→NodeODM end‑to‑end), <strong>MorphoSourceImport</strong>, <strong>SkyscanReconImport</strong>, <strong>HiResScreenCapture</strong>, <strong>SlicerScriptEditor</strong> — modules adopted for faster, reproducible 3D data processing and visualization.</li>
+    </ul>
+  </div>
+
+  <!-- Card 6: Stats & Modeling -->
+  <div class="skill-card">
+    <div class="card-icon"><i class="fa-solid fa-chart-line"></i></div>
+    <h3>Stats &amp; Modeling</h3>
+    <ul>
+      <li>Bayesian &amp; classical inference; variational methods; predictive modeling; statistical shape analysis; evaluation beyond accuracy (AUPRC, calibration, uncertainty).</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Tech Stack as an icon list -->
+<div class="tech-stack">
+  <h3>Tech stack at a glance:</h3>
+  <ul class="tech-list">
+    <li><i class="devicon-python-plain colored"></i> Python</li>
+    <li><i class="devicon-pytorch-original colored"></i> PyTorch</li>
+    <li><i class="devicon-tensorflow-original colored"></i> TensorFlow/Keras</li>
+    <li><i class="devicon-docker-plain colored"></i> Docker</li>
+    <li><i class="devicon-amazonwebservices-original colored"></i> AWS</li>
+    <li><i class="devicon-googlecloud-plain colored"></i> GCP</li>
+    <li><i class="devicon-microsoftsqlserver-plain colored"></i> SQL</li>
+    <li><i class="fa-solid fa-cube"></i> NIfTI/DICOM</li>
+  </ul>
+</div>
 
 <!-- no <hr> here either -->
 
