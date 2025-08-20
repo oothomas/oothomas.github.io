@@ -28,7 +28,7 @@
     and downstream statistical or ML analyses.
 
   # Optional quick-link buttons (show as buttons if present)
-  paper_url: "https://10.1111/joa.14196"
+  paper_url: "https://onlinelibrary.wiley.com/doi/10.1111/joa.14196"
   repo_url:  "https://github.com/oothomas/SSC-MorphVQ"
   demo_url:  "https://github.com/oothomas/SSC-MorphVQ"   # optional
 
