@@ -2,7 +2,7 @@
    Projects Gallery Styles (GitHub Pages – Modernist theme)
    ========================================================= */
 
-/* Color system tuned to your palette */
+/* Palette */
 :root {
   --accent: #2a63a4;
   --accent-hover: #1d4f8c;
@@ -13,12 +13,12 @@
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
   --shadow-md: 0 4px 10px rgba(0,0,0,0.12);
 
-  /* Quick knobs */
-  --thumb-gap: 14px;        /* space between thumbs */
-  --thumb-aspect: 16 / 10;  /* 16:10; use 16/9 for shorter thumbs */
+  /* Knobs */
+  --thumb-gap: 14px;       /* space between the two thumbs */
+  --thumb-aspect: 16 / 10; /* 16:9 makes them shorter; 16:10 is a bit taller */
 }
 
-/* ---------- Remove any theme line above the Projects heading ---------- */
+/* Remove any theme line above the Projects heading */
 h2#projects,
 #projects {
   border: 0 !important;
@@ -27,10 +27,10 @@ h2#projects,
   margin-top: 0.6rem;
   padding-top: 0;
 }
-/* Hide an <hr> if it is immediately before the Projects heading */
+/* Hide an <hr> if it sits right before the Projects heading */
 hr:has(+ h2#projects) { display: none; }
 
-/* ---------- Grid containing all project cards ---------- */
+/* Grid that holds project cards */
 .projects-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
@@ -39,7 +39,7 @@ hr:has(+ h2#projects) { display: none; }
   width: 100%;
 }
 
-/* ---------- Card ---------- */
+/* Card */
 .project-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
@@ -47,15 +47,12 @@ hr:has(+ h2#projects) { display: none; }
   padding: 16px;
   box-shadow: var(--shadow-sm);
   transition: box-shadow .2s ease, transform .2s ease;
-  overflow: hidden; /* stop any micro overflow */
+  overflow: hidden; /* stop micro-overflow */
 }
-/* Include borders in width calc for everything inside the card */
+/* Include borders in width calculations to avoid creep */
 .project-card, .project-card * { box-sizing: border-box; }
 
-.project-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
-}
+.project-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
 
 .project-title {
   margin: 0 0 12px 0;
@@ -64,22 +61,21 @@ hr:has(+ h2#projects) { display: none; }
   color: var(--accent);
 }
 
-/* ---------- Thumbnails row: larger but safe, left-aligned, two-up ---------- */
+/* ==== Thumbnails row (LEFT-JUSTIFIED, two-up, slightly larger) ==== */
 .project-thumbs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr)); /* always two columns */
+  grid-template-columns: repeat(2, minmax(0, 1fr));   /* always two columns */
   gap: var(--thumb-gap);
-  /* Slightly larger than before, still guaranteed to fit */
-  max-width: min(820px, calc(100% - 24px));
-  padding: 0 8px;                 /* inner breathing room */
-  margin-left: 0;                  /* left-aligned */
-  margin-right: auto;              /* prevents touching right edge */
-  margin-bottom: 12px;
+  width: 100%;
+  max-width: 860px;                                   /* a bit larger but safe */
+  margin: 0 0 12px 0 !important;                      /* align to card's left edge */
+  padding: 0;                                         /* line up with text */
+  justify-content: start;                             /* tracks hug the left */
   align-items: start;
 }
 .project-thumbs a { display: block; width: 100%; }
 
-/* Thumbnail box (consistent aspect; scales with row width) */
+/* Thumbnail box */
 .thumb {
   position: relative;
   overflow: hidden;
@@ -116,7 +112,7 @@ a:focus .thumb img { transform: scale(1.04); }
 .thumb:hover .thumb-caption,
 a:focus .thumb .thumb-caption { opacity: 1; }
 
-/* ---------- Body / description / links ---------- */
+/* Body / links */
 .project-body { margin-top: 8px; }
 .project-desc { color: var(--text); }
 .project-desc p { margin: 0 0 10px 0; }
@@ -139,16 +135,8 @@ a:focus .thumb .thumb-caption { opacity: 1; }
   transition: transform .15s ease, box-shadow .15s ease, background .2s ease;
 }
 .btn-sm:hover,
-.btn-sm:focus {
-  background: var(--accent-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
-  outline: none;
-}
-.btn-sm:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
+.btn-sm:focus { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 3px 6px rgba(0,0,0,0.15); }
+.btn-sm:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .project-citation {
   margin: 6px 0 0 0;
@@ -157,28 +145,20 @@ a:focus .thumb .thumb-caption { opacity: 1; }
   line-height: 1.35;
 }
 
-/* ---------- Responsiveness ---------- */
+/* Responsiveness */
 @media (max-width: 760px) {
-  /* Stack the thumbs on smaller screens for readability */
-  .project-thumbs {
-    max-width: none;
-    grid-template-columns: 1fr;
-    padding: 0; /* let them be full width on mobile */
-  }
+  .project-thumbs { max-width: none; grid-template-columns: 1fr; }
 }
 @media (max-width: 420px) {
   .projects-grid { gap: 18px; }
 }
 
-/* ---------- Accessibility / Motion preferences ---------- */
+/* Reduced-motion */
 @media (prefers-reduced-motion: reduce) {
-  .project-card,
-  .thumb img,
-  .thumb-caption,
-  .btn-sm { transition: none !important; }
+  .project-card, .thumb img, .thumb-caption, .btn-sm { transition: none !important; }
 }
 
-/* ---------- Optional: dark mode ---------- */
+/* Gentle dark mode */
 @media (prefers-color-scheme: dark) {
   :root {
     --card-bg: #111418;
