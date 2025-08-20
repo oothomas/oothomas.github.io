@@ -14,8 +14,8 @@
   --shadow-md: 0 4px 10px rgba(0,0,0,0.12);
 
   /* Quick knobs */
-  --thumb-gap: 12px;          /* space between the two thumbs */
-  --thumb-aspect: 16 / 10;    /* aspect ratio for thumbs */
+  --thumb-gap: 10px;          /* space between the two thumbs */
+  --thumb-aspect: 16 / 9;     /* 16:9 makes thumbs a bit shorter */
 }
 
 /* ---------- Remove any theme line above the Projects heading ---------- */
@@ -47,11 +47,16 @@ hr:has(+ h2#projects) { display: none; }
   padding: 16px;
   box-shadow: var(--shadow-sm);
   transition: box-shadow .2s ease, transform .2s ease;
+  overflow: hidden; /* safety: clip micro-overshoots */
 }
+/* Ensure borders are included in width calc to prevent overflow */
+.project-card, .project-card * { box-sizing: border-box; }
+
 .project-card:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
+
 .project-title {
   margin: 0 0 10px 0;
   font-size: 1.15rem;
@@ -59,14 +64,16 @@ hr:has(+ h2#projects) { display: none; }
   color: var(--accent);
 }
 
-/* ---------- Thumbnails row: force two-up, reasonable size ---------- */
+/* ---------- Thumbnails row: force two-up and keep them inside ---------- */
 .project-thumbs {
   display: grid !important;
-  /* ALWAYS two columns when space allows; minmax(0,1fr) prevents wrap */
+  /* Two equal columns that can’t overflow due to intrinsic sizes */
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: var(--thumb-gap);
   margin-bottom: 12px;
+  align-items: start;
 }
+.project-thumbs a { display: block; width: 100%; }
 
 /* Thumbnail box (consistent aspect; scales with card width) */
 .thumb {
@@ -148,7 +155,7 @@ a:focus .thumb .thumb-caption { opacity: 1; }
 
 /* ---------- Responsiveness ---------- */
 @media (max-width: 760px) {
-  /* On smaller screens, stack the two thumbs for readability */
+  /* Stack the thumbs on smaller screens */
   .project-thumbs { grid-template-columns: 1fr !important; }
 }
 @media (max-width: 420px) {
