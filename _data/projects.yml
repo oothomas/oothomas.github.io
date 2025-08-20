@@ -1,3 +1,43 @@
+- title: "SlicerMorph Photogrammetry: SAM‑NodeODM Pipeline for High‑Fidelity 3D Specimens"
+  description: >
+    This project delivers a fully open, end‑to‑end photogrammetry workflow inside 3D Slicer that
+    integrates automatic image masking via the Segment Anything Model (SAM) with surface reconstruction
+    using OpenDroneMap’s NodeODM, wrapped in a user‑friendly Slicer extension. The module unifies image
+    import, batch/single‑image masking, optional scaling via ArUco/GCPs, reconstruction, and direct model
+    import for morphometric analysis.
+
+    Goals were twofold: streamline background removal and improve geometric accuracy, especially around
+    delicate cranial structures. Using 14 mountain‑beaver skulls with micro‑CT as reference, the updated
+    workflow lowered mean surface distance and RMSE by ~10–15% across specimens versus our prior open‑source
+    pipeline, while Hausdorff changed little—evidence that gains were global rather than driven by a few
+    outliers. Qualitatively, thin elements (e.g., zygomatic arches, orbital rims) showed fewer breaks,
+    clogs, and smoothing artifacts. A Taguchi L16 design efficiently explored NodeODM parameters
+    (e.g., mesh‑octree‑depth, mesh‑size, feature/pc quality), yielding a reproducible configuration that
+    balances fidelity and runtime; all job configs are saved as JSON for auditability.
+
+    Findings: (1) Automated SAM masking markedly reduces manual cleanup and operator bias;
+    (2) tuned NodeODM reconstruction produces smoother, more anatomically faithful meshes; and
+    (3) the one‑ecosystem approach (mask → reconstruct → analyze) accelerates research hand‑offs to
+    SlicerMorph morphometrics. Broader impact spans natural‑history collections, ecology/evolution studies,
+    teaching/outreach, and large‑cohort digitization where cost, licensing, and throughput matter. Cloud‑ready
+    deployment (MorphoCloud) supports GPU‑accelerated processing without local DevOps overhead.
+  # Optional quick-link buttons (show as buttons if present)
+  paper_url: "https://doi.org/10.1242/bio.062126"
+  repo_url:  "https://github.com/SlicerMorph/SlicerPhotogrammetry"
+  demo_url:  "https://github.com/SlicerMorph/SlicerPhotogrammetry"   # optional
+
+  # Optional full citation string (shown under buttons)
+  publication: "Thomas, O. O., Zhang, C., & Maga, A. M. (2025). SlicerMorph photogrammetry: An open‑source photogrammetry workflow for reconstructing 3D models. *Biology Open, 14*, bio062126. https://doi.org/10.1242/bio.062126"
+
+  images:
+    - thumb: "assets/images/projects/slicerphotogrammetry-ui-thumb.png"
+      full:  "assets/images/projects/slicerphotogrammetry-ui-full.png"
+      caption: "Workflow & UI: SAM-based batch masking and NodeODM reconstruction inside 3D Slicer, with the reconstructed textured skull imported directly for analysis."
+      alt: "Functional-map pipeline diagram"  # optional
+    - thumb: "assets/images/projects/slicerphotogrammetry-compare-thumb.png"
+      full:  "assets/images/projects/slicerphotogrammetry-compare-full.png"
+      caption: "Side‑by‑side reconstructions with deviation heatmaps versus micro‑CT; the updated pipeline reduces artifacts around thin structures (e.g., zygomatic arches) and lowers mean/RMSE errors."
+
 - title: "AutoLandmark‑FM: Functional‑Map Landmarking for Mouse Mandibles"
   description: >
     This project develops an automated pipeline for anatomical landmark placement on 3D mouse
