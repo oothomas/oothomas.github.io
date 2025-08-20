@@ -15,7 +15,7 @@
 
   /* Knobs */
   --thumb-gap: 14px;       /* space between the two thumbs */
-  --thumb-aspect: 16 / 10; /* 16:9 makes them shorter; 16:10 is a bit taller */
+  --thumb-aspect: 16 / 10; /* set 16/9 to make thumbs shorter */
 }
 
 /* Remove any theme line above the Projects heading */
@@ -27,14 +27,14 @@ h2#projects,
   margin-top: 0.6rem;
   padding-top: 0;
 }
-/* Hide an <hr> if it sits right before the Projects heading */
+/* Hide an <hr> if it sits right before the Projects heading (modern browsers) */
 hr:has(+ h2#projects) { display: none; }
 
-/* Grid that holds project cards */
+/* ========= STACK PROJECTS (one per row) ========= */
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 24px;
+  grid-template-columns: 1fr;   /* <— force single column layout */
+  gap: 32px;                    /* spacing between stacked cards */
   margin-top: 12px;
   width: 100%;
 }
@@ -61,13 +61,13 @@ hr:has(+ h2#projects) { display: none; }
   color: var(--accent);
 }
 
-/* ==== Thumbnails row (LEFT-JUSTIFIED, two-up, slightly larger) ==== */
+/* ==== Thumbnails row (left-justified, two-up) ==== */
 .project-thumbs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));   /* always two columns */
   gap: var(--thumb-gap);
   width: 100%;
-  max-width: 860px;                                   /* a bit larger but safe */
+  max-width: 860px;                                   /* safe, slightly larger */
   margin: 0 0 12px 0 !important;                      /* align to card's left edge */
   padding: 0;                                         /* line up with text */
   justify-content: start;                             /* tracks hug the left */
@@ -150,7 +150,7 @@ a:focus .thumb .thumb-caption { opacity: 1; }
   .project-thumbs { max-width: none; grid-template-columns: 1fr; }
 }
 @media (max-width: 420px) {
-  .projects-grid { gap: 18px; }
+  .projects-grid { gap: 24px; }
 }
 
 /* Reduced-motion */
