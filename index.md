@@ -57,7 +57,7 @@ title: "Home"
   padding: 1.5rem;
   border-radius: 10px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   box-shadow: 0 4px 8px rgba(0,0,0,0.15);
   /* Fade-in animation */
   opacity: 0;
@@ -77,11 +77,16 @@ title: "Home"
   margin-right: 1.5rem;
 }
 .profile-summary {
-  max-width: 500px;
+  flex: 1;
 }
 .profile-summary p {
   line-height: 1.6;
-  margin: 0;
+  margin: 0 0 1rem 0;
+}
+.profile-summary hr {
+  border: none;
+  border-top: 1px solid #ccc;
+  margin: 1rem 0;
 }
 @media (max-width: 600px) {
   .intro-card {
@@ -107,8 +112,11 @@ title: "Home"
 <section class="intro-card">
   <img src="{{ 'assets/images/profile.jpg' | relative_url }}" alt="Portrait of Oshane O. Thomas" class="profile-photo" />
   <div class="profile-summary">
-    <p>I am a computational biologist and machine learning researcher with a passion for decoding biological form. I specialize in biological shape analysis, AI-powered phenotyping, and functional morphology, using deep learning and advanced 3D imaging to quantify the rich information embedded in anatomical structures. My expertise spans both academic research and industry applications. I develop novel algorithms and pipelines that push the boundaries of scientific discovery while also translating these advances into practical tools for biomedical and evolutionary studies.
-I'm particularly drawn to questions about how shape encodes biological information—whether it reveals evolutionary patterns, reflects developmental processes, or signals the onset of disease. In pursuing these questions, I've worked with diverse 3D datasets across species and scales (from high-resolution scans of mouse bones to primate skeletal collections and clinical human images) while focusing on extracting quantitative phenotypes from complex morphology. A hallmark of my work is an emphasis on open science and tool-building: I develop robust, open-source software (such as 3D Slicer extensions) that enables high-throughput, reproducible shape analysis. Through interdisciplinary collaborations across evolutionary biology, biomechanics, and AI, I aim to transform cutting-edge computational methods into accessible tools and translational applications. Ultimately, I strive to advance both scientific understanding and human health through this work.</p>
+    <p>I am a computational biologist and machine learning researcher with a passion for decoding biological form. I specialize in biological shape analysis, AI-powered phenotyping, and functional morphology, using deep learning and advanced 3D imaging to quantify the rich information embedded in anatomical structures. My expertise spans both academic research and industry applications. I develop novel algorithms and pipelines that push the boundaries of scientific discovery while also translating these advances into practical tools for biomedical and evolutionary studies.</p>
+    <hr>
+    <p>I'm particularly drawn to questions about how shape encodes biological information—whether it reveals evolutionary patterns, reflects developmental processes, or signals the onset of disease. In pursuing these questions, I've worked with diverse 3D datasets across species and scales (from high-resolution scans of mouse bones to primate skeletal collections and clinical human images) while focusing on extracting quantitative phenotypes from complex morphology. A hallmark of my work is an emphasis on open science and tool-building: I develop robust, open-source software (such as 3D Slicer extensions) that enables high-throughput, reproducible shape analysis.</p>
+    <hr>
+    <p>Through interdisciplinary collaborations across evolutionary biology, biomechanics, and AI, I aim to transform cutting-edge computational methods into accessible tools and translational applications. Ultimately, I strive to advance both scientific understanding and human health through this work.</p>
   </div>
 </section>
 
