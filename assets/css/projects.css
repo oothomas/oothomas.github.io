@@ -14,29 +14,18 @@
   --shadow-md: 0 4px 10px rgba(0,0,0,0.12);
 }
 
-/* -------- Full-bleed container for the Projects section -------- */
-/* Breaks out of Modernist's narrow content column ONLY here,
-   but keeps a narrower inner max-width so it doesn't hang off. */
-.projects-fullbleed {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
-  background: transparent;
-  overflow-x: clip; /* prevents tiny overflow due to scrollbar/vw math */
+/* ---------- Remove any theme line above the Projects heading ---------- */
+h2#projects {
+  border: 0 !important;
+  padding-top: 0;
+  margin-top: 0.6rem;
 }
+/* If an <hr> sneaks in directly before Projects, hide it */
+hr:has(+ h2#projects) { display: none; }
 
-.projects-fullbleed .projects-container {
-  /* Narrowed from 1200px to 1000px so it doesn't overshoot on the right */
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 0 16px; /* viewport padding */
-}
-
-/* ---------- Grid ---------- */
-
+/* ---------- Grid containing all project cards ---------- */
 .projects-grid {
   display: grid;
-  /* auto-fit collapses empty columns so single cards stretch within container */
   grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: 24px;
   margin-top: 12px;
@@ -44,7 +33,6 @@
 }
 
 /* ---------- Card ---------- */
-
 .project-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
@@ -53,12 +41,10 @@
   box-shadow: var(--shadow-sm);
   transition: box-shadow .2s ease, transform .2s ease;
 }
-
 .project-card:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
-
 .project-title {
   margin: 0 0 10px 0;
   font-size: 1.15rem;
@@ -66,27 +52,24 @@
   color: var(--accent);
 }
 
-/* ---------- Thumbnails row ---------- */
-
+/* ---------- Thumbnails row: two-up grid ---------- */
 .project-thumbs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
   gap: 12px;
-  flex-wrap: wrap;
   margin-bottom: 12px;
 }
 
-/* Each thumbnail is a responsive box with consistent aspect ratio */
+/* Thumbnail box (consistent aspect; scales with card width) */
 .thumb {
   position: relative;
   overflow: hidden;
   border-radius: 10px;
   border: 1px solid var(--card-border);
   background: #f3f6fa;
-  aspect-ratio: 16 / 10; /* keeps a tidy, consistent shape */
-  width: clamp(260px, 40vw, 480px);
-  max-width: 100%;
+  aspect-ratio: 16 / 10;
+  width: 100%;
 }
-
 .thumb img {
   display: block;
   width: 100%;
@@ -94,11 +77,8 @@
   object-fit: cover;
   transition: transform .25s ease;
 }
-
 .thumb:hover img,
-a:focus .thumb img {
-  transform: scale(1.04);
-}
+a:focus .thumb img { transform: scale(1.04); }
 
 /* Hover/focus caption overlay */
 .thumb-caption {
@@ -114,23 +94,13 @@ a:focus .thumb img {
   transition: opacity .2s ease;
   pointer-events: none;
 }
-
 .thumb:hover .thumb-caption,
-a:focus .thumb .thumb-caption {
-  opacity: 1;
-}
+a:focus .thumb .thumb-caption { opacity: 1; }
 
 /* ---------- Body / description / links ---------- */
-
 .project-body { margin-top: 6px; }
-
-.project-desc {
-  color: var(--text);
-}
-
-.project-desc p {
-  margin: 0 0 10px 0;
-}
+.project-desc { color: var(--text); }
+.project-desc p { margin: 0 0 10px 0; }
 
 .project-links {
   display: flex;
@@ -138,8 +108,6 @@ a:focus .thumb .thumb-caption {
   flex-wrap: wrap;
   margin: 6px 0 2px 0;
 }
-
-/* Small action buttons */
 .btn-sm {
   display: inline-block;
   padding: 6px 10px;
@@ -151,7 +119,6 @@ a:focus .thumb .thumb-caption {
   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
   transition: transform .15s ease, box-shadow .15s ease, background .2s ease;
 }
-
 .btn-sm:hover,
 .btn-sm:focus {
   background: var(--accent-hover);
@@ -159,7 +126,6 @@ a:focus .thumb .thumb-caption {
   box-shadow: 0 3px 6px rgba(0,0,0,0.15);
   outline: none;
 }
-
 .btn-sm:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -173,30 +139,24 @@ a:focus .thumb .thumb-caption {
 }
 
 /* ---------- Responsiveness ---------- */
-
+@media (max-width: 900px) {
+  .project-thumbs {
+    grid-template-columns: 1fr; /* stack thumbnails on small screens */
+  }
+}
 @media (max-width: 420px) {
-  .projects-grid {
-    gap: 18px;
-  }
-  .thumb {
-    width: 100%;
-    aspect-ratio: 16 / 10;
-  }
+  .projects-grid { gap: 18px; }
 }
 
 /* ---------- Accessibility / Motion preferences ---------- */
-
 @media (prefers-reduced-motion: reduce) {
   .project-card,
   .thumb img,
   .thumb-caption,
-  .btn-sm {
-    transition: none !important;
-  }
+  .btn-sm { transition: none !important; }
 }
 
-/* ---------- Optional: light/dark adjustment (gentle) ---------- */
-
+/* ---------- Optional: dark mode ---------- */
 @media (prefers-color-scheme: dark) {
   :root {
     --card-bg: #111418;
