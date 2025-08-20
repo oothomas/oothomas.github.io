@@ -36,7 +36,7 @@
   publication: "Thomas, O. O., & Maga, A. M. (2025). Leveraging descriptor learning and functional map‑based shape matching for automated anatomical landmarking in mouse mandibles. *Journal of Anatomy, 246*, 829–845. https://doi.org/10.1111/joa.14196"
 
   images:
-    - thumb: "assets/images/projects/autolandmarkfm-arch-thumb.pn"
+    - thumb: "assets/images/projects/autolandmarkfm-arch-thumb.png"
       full:  "assets/images/projects/autolandmarkfm-arch-full.png"
       caption: "Network and training scheme: DiffusionNet descriptor learning, main and complex functional map branches, and cycle‑consistency enforcing near‑bijective correspondences for landmark transfer."
       alt: "Functional-map pipeline diagram"  # optional
