@@ -46,16 +46,69 @@ title: "Home"
   <a href="/#cv" class="nav-button">CV</a>
 </nav>
 
-<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-  <img src="{{ 'assets/images/profile.jpg' | relative_url }}"
-       alt="Portrait of Oshane O. Thomas"
-       style="width:150px;border-radius:8px;">
-  <div style="font-size:18px;max-width:700px;">
-    I am a computational biologist and machine learning researcher specializing in biological shape analysis,
-    AI-powered phenotyping, and functional morphology. My expertise bridges academic research and industry applications,
-    leveraging deep learning and 3D data processing to extract meaningful insights from morphological datasets.
+<style>
+/* Profile Introduction Card Styles */
+.intro-card {
+  background-color: #597eae;
+  font-family: 'Inter', 'Open Sans', system-ui, sans-serif;
+  color: #fff;
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-start;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  /* Fade-in animation */
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeSlideIn 0.6s ease-out 0.1s forwards;
+}
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.profile-photo {
+  width: 150px;
+  max-width: 100%;
+  border-radius: 50%;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  margin-right: 1.5rem;
+}
+.profile-summary {
+  max-width: 500px;
+}
+.profile-summary p {
+  line-height: 1.6;
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .intro-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .profile-photo {
+    margin: 0 0 1rem 0;
+    width: 50%;
+  }
+  .profile-summary {
+    max-width: 100%;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .intro-card {
+    background-color: #4a6f9f;
+  }
+}
+</style>
+
+<section class="intro-card">
+  <img src="{{ 'assets/images/profile.jpg' | relative_url }}" alt="Portrait of Oshane O. Thomas" class="profile-photo" />
+  <div class="profile-summary">
+    <p>I am a computational biologist and machine learning researcher specializing in biological shape analysis, AI-powered phenotyping, and functional morphology. My expertise bridges academic research and industry applications, leveraging deep learning and 3D data processing to extract meaningful insights from morphological datasets.</p>
   </div>
-</div>
+</section>
 
 <!-- no <hr> here to avoid the white line above Projects -->
 
