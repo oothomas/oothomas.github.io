@@ -67,6 +67,21 @@ title: "Home"
   <p><strong>Throughline:</strong> Ship interpretable, reproducible systems for segmentation, classification, detection, registration, and landmarking on volumetric data.</p>
 </div>
 
+<!-- Tech Stack as an icon list -->
+<div class="tech-stack">
+  <h3>Tech stack at a glance:</h3>
+  <ul class="tech-list">
+    <li><i class="devicon-python-plain colored"></i> Python</li>
+    <li><i class="devicon-pytorch-original colored"></i> PyTorch</li>
+    <li><i class="devicon-tensorflow-original colored"></i> TensorFlow/Keras</li>
+    <li><i class="devicon-docker-plain colored"></i> Docker</li>
+    <li><i class="devicon-amazonwebservices-original colored"></i> AWS</li>
+    <li><i class="devicon-googlecloud-plain colored"></i> GCP</li>
+    <li><i class="devicon-microsoftsqlserver-plain colored"></i> SQL</li>
+    <li><i class="fa-solid fa-cube"></i> NIfTI/DICOM</li>
+  </ul>
+</div>
+
 <!-- Responsive grid of skill cards -->
 <div class="skills-grid">
   <!-- Card 1: Modalities & Data Ops -->
@@ -128,21 +143,6 @@ title: "Home"
       <li>Bayesian &amp; classical inference; variational methods; predictive modeling; statistical shape analysis; evaluation beyond accuracy (AUPRC, calibration, uncertainty).</li>
     </ul>
   </div>
-</div>
-
-<!-- Tech Stack as an icon list -->
-<div class="tech-stack">
-  <h3>Tech stack at a glance:</h3>
-  <ul class="tech-list">
-    <li><i class="devicon-python-plain colored"></i> Python</li>
-    <li><i class="devicon-pytorch-original colored"></i> PyTorch</li>
-    <li><i class="devicon-tensorflow-original colored"></i> TensorFlow/Keras</li>
-    <li><i class="devicon-docker-plain colored"></i> Docker</li>
-    <li><i class="devicon-amazonwebservices-original colored"></i> AWS</li>
-    <li><i class="devicon-googlecloud-plain colored"></i> GCP</li>
-    <li><i class="devicon-microsoftsqlserver-plain colored"></i> SQL</li>
-    <li><i class="fa-solid fa-cube"></i> NIfTI/DICOM</li>
-  </ul>
 </div>
 
 <!-- no <hr> here either -->
