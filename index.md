@@ -52,7 +52,7 @@ title: "Home"
   </div>
 </div>
 
-<hr>
+<!-- no <hr> here to avoid the white line above Projects -->
 
 <h2 id="skills-and-expertise">🛠️ Skills and Expertise</h2>
 
@@ -71,16 +71,12 @@ Developer of **3D Slicer extensions** and open-source tools for biological and m
 ### Interdisciplinary Research & Leadership
 Experience collaborating across **biomechanics, evolutionary biology, and AI** to develop cutting-edge solutions.
 
-<!-- removed the <hr> that used to sit here to eliminate the white line above Projects -->
+<!-- no <hr> here either -->
 
 <h2 id="projects">🚀 Featured Work</h2>
 
-<!-- Full-bleed wrapper, now narrowed so it doesn't overshoot on the right -->
-<section class="projects-fullbleed">
-  <div class="projects-container">
-    {% include projects.html %}
-  </div>
-</section>
+<!-- Standard include (no full-bleed wrapper) -->
+{% include projects.html %}
 
 <hr>
 
