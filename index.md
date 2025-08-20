@@ -3,7 +3,7 @@ layout: default
 title: "Home"
 ---
 
-<!-- GLightbox (no jQuery required) -->
+<!-- GLightbox (dependency-free lightbox for the project images) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css">
 <script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
 
@@ -11,7 +11,7 @@ title: "Home"
 <link rel="stylesheet" href="{{ '/assets/css/projects.css' | relative_url }}">
 
 <style>
-/* keep your existing nav button style */
+/* Nav buttons (yours, kept intact) */
 .nav-button {
   display: inline-flex;
   align-items: center;
@@ -42,10 +42,13 @@ title: "Home"
 </nav>
 
 <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-  <img src="{{ 'assets/images/profile.jpg' | relative_url }}" alt="Oshane O. Thomas" style="width:150px;border-radius:8px;">
+  <img src="{{ 'assets/images/profile.jpg' | relative_url }}"
+       alt="Portrait of Oshane O. Thomas"
+       style="width:150px;border-radius:8px;">
   <div style="font-size:18px;max-width:700px;">
-    I am a computational biologist and machine learning researcher specializing in biological shape analysis, AI-powered phenotyping, and functional morphology.
-    My expertise bridges academic research and industry applications, leveraging deep learning and 3D data processing to extract meaningful insights from morphological datasets.
+    I am a computational biologist and machine learning researcher specializing in biological shape analysis,
+    AI-powered phenotyping, and functional morphology. My expertise bridges academic research and industry applications,
+    leveraging deep learning and 3D data processing to extract meaningful insights from morphological datasets.
   </div>
 </div>
 
@@ -72,44 +75,7 @@ Experience collaborating across **biomechanics, evolutionary biology, and AI** t
 
 <h2 id="projects">🚀 Featured Work</h2>
 
-<!-- Projects grid (from _data/projects.yml) -->
-<div class="projects-grid">
-{% raw %}{% for proj in site.data.projects %}{% endraw %}
-  <article class="project-card">
-    <h3 class="project-title">{{ proj.title }}</h3>
-
-    <div class="project-thumbs">
-      {% raw %}{% assign gallery_id = 'proj-' | append: forloop.index %}{% endraw %}
-      {% raw %}{% for img in proj.images %}{% endraw %}
-        <a href="{{ img.full | relative_url }}"
-           class="glightbox"
-           data-gallery="{{ gallery_id }}"
-           data-title="{{ img.caption | escape }}">
-          <figure class="thumb">
-            <img src="{{ img.thumb | relative_url }}" alt="{{ img.alt | default: img.caption }}">
-            <figcaption class="thumb-caption">{{ img.caption }}</figcaption>
-          </figure>
-        </a>
-      {% raw %}{% endfor %}{% endraw %}
-    </div>
-
-    <div class="project-body">
-      <!-- Use markdownify so multi-paragraph YAML descriptions render nicely -->
-      <div class="project-desc">{{ proj.description | markdownify }}</div>
-
-      <!-- Optional quick links -->
-      <div class="project-links">
-        {% raw %}{% if proj.paper_url %}<a class="btn-sm" href="{{ proj.paper_url }}" target="_blank" rel="noopener">Publication</a>{% endif %}{% endraw %}
-        {% raw %}{% if proj.repo_url %}<a class="btn-sm" href="{{ proj.repo_url }}" target="_blank" rel="noopener">GitHub</a>{% endif %}{% endraw %}
-        {% raw %}{% if proj.demo_url %}<a class="btn-sm" href="{{ proj.demo_url }}" target="_blank" rel="noopener">Demo</a>{% endif %}{% endraw %}
-      </div>
-
-      <!-- If you keep a full citation as a string -->
-      {% raw %}{% if proj.publication %}<p class="project-citation">{{ proj.publication }}</p>{% endif %}{% endraw %}
-    </div>
-  </article>
-{% raw %}{% endfor %}{% endraw %}
-</div>
+{% include projects.html %}
 
 <hr>
 
@@ -117,14 +83,14 @@ Experience collaborating across **biomechanics, evolutionary biology, and AI** t
 <p><a href="{{ '/assets/docs/Thomas_Oshane_CV.pdf' | relative_url }}" class="nav-button">Download Full CV (PDF)</a></p>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  GLightbox({
-    selector: '.glightbox',
-    touchNavigation: true,
-    loop: true,
-    openEffect: 'zoom',
-    closeEffect: 'zoom',
-    zoomable: false
+  document.addEventListener('DOMContentLoaded', function () {
+    GLightbox({
+      selector: '.glightbox',
+      touchNavigation: true,
+      loop: true,
+      openEffect: 'zoom',
+      closeEffect: 'zoom',
+      zoomable: false
+    });
   });
-});
 </script>
