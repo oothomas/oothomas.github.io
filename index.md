@@ -67,7 +67,7 @@ title: "Home"
 
 <style>
 .focus-text {
-  font-size: 1.5rem;   /* larger than normal text */
+  font-size: 1.2rem;   /* larger than normal text */
   line-height: 1.6;    /* improves readability */
 }
 </style>
