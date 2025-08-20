@@ -2,3 +2,14 @@
 ---
 @import "{{ site.theme }}";
 .wrapper { max-width: 1200px; width: 90%; }
+
+/* Enlarge site title and description */
+.project-name,
+.site-title {
+  font-size: 300%;
+}
+
+.project-tagline,
+.site-description {
+  font-size: 300%;
+}
