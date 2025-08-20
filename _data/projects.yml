@@ -1,3 +1,44 @@
+- title: "Trustworthy Exencephaly Detection with Focal‑Loss Transformers"
+  description: >
+    We build an imbalance‑aware, interpretable pipeline to detect exencephaly in late‑gestation
+    mouse embryos from high‑throughput diceCT volumes. A self‑supervised transformer (modified M3T)
+    is fine‑tuned under three regimes—cross‑entropy (CE‑Large), focal‑loss equal‑capacity (FL‑Large),
+    and focal‑loss reduced‑capacity (FL‑Small). The training recipe combines class‑balanced mini‑batches,
+    focal loss to preserve gradient on rare positives, and explicit capacity control to reduce overfitting.
+    Interpretability is a first‑class goal: we compute Integrated Gradients, register saliency to a common
+    atlas, and aggregate across five random seeds per regime (15 models total) to quantify explanation
+    sparsity and reproducibility (saliency entropy; cross‑seed Dice/Jaccard).
+
+    On 253 E15.5 embryos (24 with exencephaly; ~10% positives), all models achieved near‑perfect
+    recognition (mean accuracy 0.996 ± 0.002; some seeds/regimens reached 1.000). Crucially, focal loss
+    produced sparser, more stable explanations—reducing saliency entropy by up to 1.5 bits and roughly
+    doubling cross‑seed Dice overlap—while concentrating attribution on the malformed cranial vault and
+    suppressing spurious body‑wide signal. The focal‑loss + smaller‑capacity configuration preserved
+    perfect sensitivity in affected embryos and improved attribution consistency without sacrificing accuracy.
+
+    The workflow provides trustworthy, scalable screening for severe yet infrequent defects
+    in large knockout cohorts. It relies on standard atlas registration and image pre‑processing, and requires no
+    voxel‑level annotations, and generalizes naturally to other structural malformations and developmental
+    stages—enabling reproducible triage, clearer downstream histology decisions, and cleaner signals for
+    follow‑up morphometrics or genotype–phenotype studies.
+  # Optional quick-link buttons (show as buttons if present)
+  paper_url: "https://www.biorxiv.org/content/10.1101/2025.08.12.669840v1"
+  repo_url:  "https://github.com/oothomas/M3T_Classifer"
+  demo_url:  "https://github.com/oothomas/M3T_Classifer"   # optional
+
+  # Optional full citation string (shown under buttons)
+  publication: "Thomas, O. O., Roston, R., Shen, H., & Maga, A. M. (2025). Trustworthy detection of exencephaly in high‑throughput micro‑CT embryo screens with focal‑loss transformers. *bioRxiv*. https://doi.org/10.1101/2025.08.12.669840"
+
+  images:
+    - thumb: "assets/images/projects/exencephaly-pipeline-thumb.png"
+      full:  "assets/images/projects/exencephaly-pipeline-full.png"
+      caption: "Pipeline schematic: class‑balanced sampling, focal‑loss fine‑tuning, capacity control, and seed‑ensemble Integrated Gradients registered to an atlas for stable, localized explanations."
+      alt: "Functional-map pipeline diagram"  # optional
+    - thumb: "assets/images/projects/exencephaly-saliency-thumb.png"
+      full:  "assets/images/projects/exencephaly-saliency-full.png"
+      caption: "Ensemble‑averaged attribution maps highlight the malformed cranial vault in positive and negative cases and suppress off‑target signal; focal loss lowers saliency entropy and boosts cross‑seed Dice/Jaccard."
+
+
 - title: "SlicerMorph Photogrammetry: SAM‑NodeODM Pipeline for High‑Fidelity 3D Specimens"
   description: >
     This project delivers a fully open, end‑to‑end photogrammetry workflow inside 3D Slicer that
@@ -70,7 +111,7 @@
   # Optional quick-link buttons (show as buttons if present)
   paper_url: "https://onlinelibrary.wiley.com/doi/10.1111/joa.14196"
   repo_url:  "https://github.com/oothomas/SSC-MorphVQ"
-  demo_url:  "https://github.com/oothomas/SSC-MorphVQ"   # optional
+  demo_url:  "https://oothomas.github.io/assets/docs/projects/interactive_morphospace.html"   # optional
 
   # Optional full citation string (shown under buttons)
   publication: "Thomas, O. O., & Maga, A. M. (2025). Leveraging descriptor learning and functional map‑based shape matching for automated anatomical landmarking in mouse mandibles. *Journal of Anatomy, 246*, 829–845. https://doi.org/10.1111/joa.14196"
