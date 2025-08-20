@@ -49,10 +49,10 @@ title: "Home"
 <style>
 /* Profile Introduction Card Styles */
 .intro-card {
-  background-color: #597eae;
+  background-color: #fff;
   font-family: 'Inter', 'Open Sans', system-ui, sans-serif;
-  color: #fff;
-  max-width: 800px;
+  color: #000;
+  max-width: 1000px;
   margin: 2rem auto;
   padding: 1.5rem;
   border-radius: 10px;
@@ -71,7 +71,8 @@ title: "Home"
 .profile-photo {
   width: 150px;
   max-width: 100%;
-  border-radius: 50%;
+  border-radius: 8px;
+  border: 4px solid #2a63a4;
   box-shadow: 0 4px 6px rgba(0,0,0,0.2);
   margin-right: 1.5rem;
 }
@@ -98,7 +99,7 @@ title: "Home"
 }
 @media (prefers-color-scheme: dark) {
   .intro-card {
-    background-color: #4a6f9f;
+    background-color: #fff;
   }
 }
 </style>
