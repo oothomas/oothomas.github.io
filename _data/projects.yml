@@ -142,7 +142,7 @@
   # Optional quick-link buttons (show as buttons if present)
   paper_url: "https://doi.org/10.1371/journal.pcbi.1009061"
   repo_url:  "https://github.com/oothomas/morphVQ"
-  demo_url:  "https://github.com/oothomas/morphVQ"   # optional
+  demo_url:  "https://oothomas.github.io/assets/docs/projects/correspondence_and_landmarks.html"   # optional
 
   # Optional full citation string (shown under buttons)
   publication: "Thomas, O. O., Shen, H., Raaum, R. L., Harcourt-Smith, W. E. H., Polk, J. D., & Hasegawa-Johnson, M. (2023). Automated morphological phenotyping using learned shape descriptors and functional maps: A novel approach to geometric morphometrics. *PLOS Computational Biology, 19*(1), e1009061. https://doi.org/10.1371/journal.pcbi.1009061"
