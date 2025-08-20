@@ -14,7 +14,7 @@
 
 .skill-card {
   background: #121417;
-  color: #e6e6e6;
+  color: #e2e2e2;
   border: 1px solid #2a2c30;
   border-radius: 8px;
   padding: 1rem;
@@ -32,7 +32,7 @@
 .skill-card h3 {
   margin-top: 0;
   margin-bottom: 0.5rem;
-  color: #ffffff;
+  color: #25589a;
 }
 .skill-card ul {
   margin: 0;
@@ -40,6 +40,9 @@
 }
 .skill-card li {
   margin-bottom: 0.5em;
+}
+.skill-card strong {
+  color: #419eff;
 }
 
 .tech-stack {
