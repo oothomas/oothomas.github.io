@@ -23,7 +23,7 @@
   images:
     - thumb: "assets/images/projects/morphvq-pipeline-thumb.png"
       full:  "assets/images/projects/morphvq-pipeline-full.png"
-      caption: "PPipeline overview: manual GM vs. auto3DGM vs. morphVQ with learned descriptors, functional maps, Consistent ZoomOut, and LSSDs (area‑based & conformal)."
+      caption: "Pipeline overview: manual GM vs. auto3DGM vs. morphVQ with learned descriptors, functional maps, Consistent ZoomOut, and LSSDs (area‑based & conformal)."
       alt: "Functional-map pipeline diagram"  # optional
     - thumb: "assets/images/projects/morphvq-distinctiveness-thumb.png"
       full:  "assets/images/projects/morphvq-distinctiveness-full.png"
