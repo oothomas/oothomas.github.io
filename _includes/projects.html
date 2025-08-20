@@ -1,0 +1,33 @@
+<!-- _includes/projects.html -->
+<div class="projects-grid">
+{% for proj in site.data.projects %}
+  <article class="project-card">
+    <h3 class="project-title">{{ proj.title }}</h3>
+
+    <div class="project-thumbs">
+      {% assign gallery_id = 'proj-' | append: forloop.index %}
+      {% for img in proj.images %}
+        <a href="{{ img.full | relative_url }}"
+           class="glightbox"
+           data-gallery="{{ gallery_id }}"
+           data-title="{{ img.caption | escape }}">
+          <figure class="thumb">
+            <img src="{{ img.thumb | relative_url }}" alt="{{ img.alt | default: img.caption }}">
+            <figcaption class="thumb-caption">{{ img.caption }}</figcaption>
+          </figure>
+        </a>
+      {% endfor %}
+    </div>
+
+    <div class="project-body">
+      <div class="project-desc">{{ proj.description | markdownify }}</div>
+      <div class="project-links">
+        {% if proj.paper_url %}<a class="btn-sm" href="{{ proj.paper_url }}" target="_blank" rel="noopener">Publication</a>{% endif %}
+        {% if proj.repo_url  %}<a class="btn-sm" href="{{ proj.repo_url  }}" target="_blank" rel="noopener">GitHub</a>{% endif %}
+        {% if proj.demo_url  %}<a class="btn-sm" href="{{ proj.demo_url  }}" target="_blank" rel="noopener">Demo</a>{% endif %}
+      </div>
+      {% if proj.publication %}<p class="project-citation">{{ proj.publication }}</p>{% endif %}
+    </div>
+  </article>
+{% endfor %}
+</div>
