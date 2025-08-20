@@ -12,15 +12,22 @@
   --muted: #666;
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
   --shadow-md: 0 4px 10px rgba(0,0,0,0.12);
+
+  /* Quick knobs */
+  --thumb-gap: 12px;          /* space between the two thumbs */
+  --thumb-aspect: 16 / 10;    /* aspect ratio for thumbs */
 }
 
 /* ---------- Remove any theme line above the Projects heading ---------- */
-h2#projects {
+h2#projects,
+#projects {
   border: 0 !important;
-  padding-top: 0;
+  box-shadow: none !important;
+  background-image: none !important;
   margin-top: 0.6rem;
+  padding-top: 0;
 }
-/* If an <hr> sneaks in directly before Projects, hide it */
+/* Hide an <hr> if it is immediately before the Projects heading */
 hr:has(+ h2#projects) { display: none; }
 
 /* ---------- Grid containing all project cards ---------- */
@@ -52,11 +59,12 @@ hr:has(+ h2#projects) { display: none; }
   color: var(--accent);
 }
 
-/* ---------- Thumbnails row: two-up grid ---------- */
+/* ---------- Thumbnails row: force two-up, reasonable size ---------- */
 .project-thumbs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(240px, 1fr));
-  gap: 12px;
+  display: grid !important;
+  /* ALWAYS two columns when space allows; minmax(0,1fr) prevents wrap */
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: var(--thumb-gap);
   margin-bottom: 12px;
 }
 
@@ -67,7 +75,7 @@ hr:has(+ h2#projects) { display: none; }
   border-radius: 10px;
   border: 1px solid var(--card-border);
   background: #f3f6fa;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: var(--thumb-aspect);
   width: 100%;
 }
 .thumb img {
@@ -139,10 +147,9 @@ a:focus .thumb .thumb-caption { opacity: 1; }
 }
 
 /* ---------- Responsiveness ---------- */
-@media (max-width: 900px) {
-  .project-thumbs {
-    grid-template-columns: 1fr; /* stack thumbnails on small screens */
-  }
+@media (max-width: 760px) {
+  /* On smaller screens, stack the two thumbs for readability */
+  .project-thumbs { grid-template-columns: 1fr !important; }
 }
 @media (max-width: 420px) {
   .projects-grid { gap: 18px; }
