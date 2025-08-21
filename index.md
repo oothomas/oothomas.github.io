@@ -18,7 +18,7 @@ title: "Home"
 {% include nav.html %}
 
 <!-- Skills section banner -->
-<img src="{{ '/assets/images/projects/page_banner.png' | relative_url }}"
+<img src="{{ '/assets/images/page_banner.png' | relative_url }}"
      alt="Skills banner"
      width="1200" height="400"
      style="display:block; margin:0 auto; width:100%; max-width:1200px; height:auto;">
