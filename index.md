@@ -111,6 +111,12 @@ title: "Home"
 
 <!-- no <hr> here either -->
 
+<!-- Projects section banner -->
+<img src="{{ '/assets/images/projects/page_banner.png' | relative_url }}"
+     alt="Projects banner"
+     width="1200" height="400"
+     style="display:block; margin:0 auto; width:100%; max-width:1200px; height:auto;">
+
 <h2 id="projects">🚀 Featured Work</h2>
 
 <!-- Standard include (no full-bleed wrapper) -->
