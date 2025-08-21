@@ -20,7 +20,7 @@ title: "Home"
 <!-- Skills section banner -->
 <img src="{{ '/assets/images/page_banner.png' | relative_url }}"
      alt="Skills banner"
-     width="1200" height="400"
+     width="1200" height="314"
      style="display:block; margin:0 auto; width:100%; max-width:1200px; height:auto;">
 
 <!-- no <hr> here to avoid the white line above Projects -->
