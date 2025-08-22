@@ -41,7 +41,7 @@ title: "Home"
   </div>
   <div class="publication">
     <h4>Automated morphological phenotyping using learned shape descriptors and functional maps: A novel approach to geometric morphometrics</h4>
-    <p>Thomas, O. O., Shen, H., Raaum, R. L., Harcourt-Smith, W. H. E., Polk, J. D., &amp; Hasegawa-Johnson, M. (2023). <em>PLOS Computational Biology</em>, 19(1), e1009061.</p>
+    <p>Thomas, O. O., Shen, H., Raaum, R. L., Harcourt-Smith, W. H. E., Polk, J. D., &amp; Hasegawa-Johnson, M. (2023). <em>PLOS Computational Biology</em>, 19(1), e1009061. <a href="https://doi.org/10.1371/journal.pcbi.1009061" target="_blank">https://doi.org/10.1371/journal.pcbi.1009061</a></p>
   </div>
 </div>
 
