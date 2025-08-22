@@ -53,7 +53,7 @@
 
   images:
     - thumb: "assets/images/projects/morphvq3-recAcc-thumb.png"
-      full:  "assets/images/projects/morphvq3-recAcc-full.pngg"
+      full:  "assets/images/projects/morphvq3-recAcc-full.png"
       caption: "Example of an original surface (A1, B1) and its DISCO-AE reconstruction with corresponding error map (A2, B2). The error map is scaled in mm, with warmer colors indicating higher vertex-level deviations. Most of the surface exhibits exceptionally low reconstruction errors, demonstrating the model’s capacity to preserve both large-scale geometry and subtle morphological details."
       #alt: "Functional-map pipeline diagram"  # optional
     - thumb: "assets/images/projects/morphvq3-shapediff-thumb.png"
