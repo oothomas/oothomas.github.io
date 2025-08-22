@@ -53,19 +53,9 @@ title: "Home"
 {% include projects.html %}
 
 <!-- no <hr> here either -->
+<div style="height:2rem;"></div>
 
 <h2 id="skills-and-expertise">🛠️ Skills and Expertise</h2>
-<!-- Introductory Focus/Throughline Highlight -->
-<div class="focus-box">
-  <p class="focus-text"><strong>Focus:</strong> Medical image analysis (CT/MRI/X-ray, micro-CT) and 3D computer vision — from dataset curation to deployed models.</p>
-</div>
-
-<style>
-.focus-text {
-  font-size: 1.2rem;   /* larger than normal text */
-  line-height: 1.6;    /* improves readability */
-}
-</style>
 <!-- Tech Stack as an icon list -->
 <div class="tech-stack">
   <h3>Tech stack at a glance:</h3>
