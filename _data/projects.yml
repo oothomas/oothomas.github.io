@@ -97,7 +97,7 @@
   # Optional quick-link buttons (show as buttons if present)
   paper_url: "https://onlinelibrary.wiley.com/doi/10.1111/joa.14196"
   repo_url:  "https://github.com/oothomas/SSC-MorphVQ"
-  demo_url:  "https://oothomas.github.io/assets/docs/projects/interactive_morphospace.html"   # optional
+  #demo_url:  "https://oothomas.github.io/assets/docs/projects/interactive_morphospace.html"   # optional
 
   # Optional full citation string (shown under buttons)
   publication: "Thomas, O. O., & Maga, A. M. (2025). Leveraging descriptor learning and functional map‑based shape matching for automated anatomical landmarking in mouse mandibles. *Journal of Anatomy, 246*, 829–845. https://doi.org/10.1111/joa.14196"
