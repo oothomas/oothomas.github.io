@@ -29,6 +29,37 @@
       full:  "assets/images/projects/exencephaly-saliency-full.png"
       caption: "Ensemble‑averaged attribution maps highlight the malformed cranial vault in positive and negative cases and suppress off‑target signal; focal loss lowers saliency entropy and boosts cross‑seed Dice/Jaccard."
 
+- title: "Decoding Shape Diversity: An Autoencoder-Based Morphospace for Comprehensive Biological Shape Analysis"
+  description: |
+    We build an interactive morphospace for whole‑surface anatomy. Using morphVQ functional‑map correspondences (landmark‑free, no shared mesh), 
+    we train a DISCO‑AE mesh autoencoder to learn a smooth latent space that decodes to valid surfaces. Moving along an axis warps a template and 
+    paints local deformation fields, showing which regions expand, contract, or bend—and why groups differ.
+
+    Unlike PCA on sparse landmarks, this covers every vertex, is stable across mesh resolutions, and yields anatomy‑faithful, continuous trajectories 
+    with PCA‑like interpretability.
+
+    This enables cohort‑scale, interpretable exploration for comparative anatomy, preclinical phenotyping, and device design; supports QC, 
+    hypothesis generation, and downstream analysis (exportable meshes/fields). Built to plug into SlicerMorph for reproducible, large‑dataset workflows.
+
+    DISCO-AE Citation: S. Hahner, S. Attaiki, J. Garcke and M. Ovsjanikov, “Unsupervised Representation Learning for Diverse Deformable Shape Collections,” 2024 International Conference on 3D Vision (3DV), Davos, Switzerland, 2024, pp. 1594–1604, doi: 10.1109/3DV62453.2024.00158.
+    
+  # Optional quick-link buttons (show as buttons if present)
+  #paper_url: "https://www.biorxiv.org/content/10.1101/2025.08.12.669840v1"
+  #repo_url:  "https://github.com/oothomas/M3T_Classifer"
+  demo_url:  "https://oothomas.github.io/assets/docs/projects/interactive_morphospace.html"   # optional
+
+  # Optional full citation string (shown under buttons)
+  publication: "NA"
+
+  images:
+    - thumb: "assets/images/projects/morphvq3-recAcc-thumb.png"
+      full:  "assets/images/projects/morphvq3-recAcc-full.pngg"
+      caption: "Example of an original surface (A1, B1) and its DISCO-AE reconstruction with corresponding error map (A2, B2). The error map is scaled in mm, with warmer colors indicating higher vertex-level deviations. Most of the surface exhibits exceptionally low reconstruction errors, demonstrating the model’s capacity to preserve both large-scale geometry and subtle morphological details."
+      #alt: "Functional-map pipeline diagram"  # optional
+    - thumb: "assets/images/projects/morphvq3-shapediff-thumb.png"
+      full:  "assets/images/projects/morphvq3-shapediff-full.png"
+      caption: "Template warped mandible along the first five principal components of the latent space. Each PC is extended beyond the natural range of variation to better illustrate the shape differences on each PC. Red shading on the mandible surfaces highlights regions that deviate more strongly from the mean shape at zero."
+
 
 - title: "SlicerMorph Photogrammetry: SAM‑NodeODM Pipeline for High‑Fidelity 3D Specimens"
   description: |
