@@ -27,8 +27,6 @@
         {% if proj.repo_url  %}<a class="btn-sm" href="{{ proj.repo_url  }}" target="_blank" rel="noopener">GitHub</a>{% endif %}
         {% if proj.demo_url  %}<a class="btn-sm" href="{{ proj.demo_url  }}" target="_blank" rel="noopener">Demo</a>{% endif %}
       </div>
-
-      {% if proj.publication %}<p class="project-citation">{{ proj.publication }}</p>{% endif %}
     </div>
   </article>
 {% endfor %}
