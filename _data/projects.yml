@@ -5,10 +5,10 @@
     and we evaluated explanation quality—not just ROC. On 253 E15.5 volumes (24 exencephaly), all 15 models achieved 0.996 ± 0.002 accuracy; focal loss cut saliency 
     entropy by up to 1.5 bits and doubled cross‑seed Dice, focusing attribution on the malformed cranial vault.
 
-    Why it’s interesting: Turns saliency from impressionistic heat into anatomy‑specific, reproducible evidence—without voxel labels—using only atlas 
+    This urns attribution/saliency from impressionistic heatmaps into anatomy‑specific, reproducible evidence—without voxel labels—using only atlas 
     registration and standard preprocessing.
 
-    Impact: Delivers trustworthy, high‑throughput phenotyping for large mouse genetics programs, triaging defects with near‑perfect sensitivity and 
+    Our approach delivers trustworthy, high‑throughput phenotyping for large mouse genetics programs, triaging defects with near‑perfect sensitivity and 
     reproducible explanations. The recipe generalizes to other malformations and cohorts, offering a practical template for interpretable 3D classification 
     under severe class imbalance.
     
