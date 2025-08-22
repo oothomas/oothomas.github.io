@@ -1,26 +1,17 @@
 - title: "Trustworthy Exencephaly Detection with Focal‑Loss Transformers"
   description: |
-    We build an imbalance‑aware, interpretable pipeline to detect exencephaly in late‑gestation
-    mouse embryos from high‑throughput diceCT volumes. A self‑supervised transformer (modified M3T)
-    is fine‑tuned under three regimes—cross‑entropy (CE‑Large), focal‑loss equal‑capacity (FL‑Large),
-    and focal‑loss reduced‑capacity (FL‑Small). The training recipe combines class‑balanced mini‑batches,
-    focal loss to preserve gradient on rare positives, and explicit capacity control to reduce overfitting.
-    Interpretability is a first‑class goal: we compute Integrated Gradients, register saliency to a common
-    atlas, and aggregate across five random seeds per regime (15 models total) to quantify explanation
-    sparsity and reproducibility (saliency entropy; cross‑seed Dice/Jaccard).
+    IMPC/KOMP‑style whole‑embryo iodine‑contrast micro‑CT (diceCT) screens search for lethal malformations across knockout lines—but positives are rare (~10%), 
+    a recipe for brittle classifiers and noisy saliency. We built an imbalance‑aware transformer that pairs focal loss with capacity control and seed ensembling, 
+    and we evaluated explanation quality—not just ROC. On 253 E15.5 volumes (24 exencephaly), all 15 models achieved 0.996 ± 0.002 accuracy; focal loss cut saliency 
+    entropy by up to 1.5 bits and doubled cross‑seed Dice, focusing attribution on the malformed cranial vault.
 
-    On 253 E15.5 embryos (24 with exencephaly; ~10% positives), all models achieved near‑perfect
-    recognition (mean accuracy 0.996 ± 0.002; some seeds/regimens reached 1.000). Crucially, focal loss
-    produced sparser, more stable explanations—reducing saliency entropy by up to 1.5 bits and roughly
-    doubling cross‑seed Dice overlap—while concentrating attribution on the malformed cranial vault and
-    suppressing spurious body‑wide signal. The focal‑loss + smaller‑capacity configuration preserved
-    perfect sensitivity in affected embryos and improved attribution consistency without sacrificing accuracy.
+    Why it’s interesting: Turns saliency from impressionistic heat into anatomy‑specific, reproducible evidence—without voxel labels—using only atlas 
+    registration and standard preprocessing.
 
-    The workflow provides trustworthy, scalable screening for severe yet infrequent defects
-    in large knockout cohorts. It relies on standard atlas registration and image pre‑processing, and requires no
-    voxel‑level annotations, and generalizes naturally to other structural malformations and developmental
-    stages—enabling reproducible triage, clearer downstream histology decisions, and cleaner signals for
-    follow‑up morphometrics or genotype–phenotype studies.
+    Impact: Delivers trustworthy, high‑throughput phenotyping for large mouse genetics programs, triaging defects with near‑perfect sensitivity and 
+    reproducible explanations. The recipe generalizes to other malformations and cohorts, offering a practical template for interpretable 3D classification 
+    under severe class imbalance.
+    
   # Optional quick-link buttons (show as buttons if present)
   paper_url: "https://www.biorxiv.org/content/10.1101/2025.08.12.669840v1"
   repo_url:  "https://github.com/oothomas/M3T_Classifer"
