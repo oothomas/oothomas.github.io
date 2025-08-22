@@ -24,7 +24,7 @@
   # Optional quick-link buttons (show as buttons if present)
   paper_url: "https://www.biorxiv.org/content/10.1101/2025.08.12.669840v1"
   repo_url:  "https://github.com/oothomas/M3T_Classifer"
-  demo_url:  "https://github.com/oothomas/M3T_Classifer"   # optional
+  #demo_url:  "https://github.com/oothomas/M3T_Classifer"   # optional
 
   # Optional full citation string (shown under buttons)
   publication: "Thomas, O. O., Roston, R., Shen, H., & Maga, A. M. (2025). Trustworthy detection of exencephaly in high‑throughput micro‑CT embryo screens with focal‑loss transformers. *bioRxiv*. https://doi.org/10.1101/2025.08.12.669840"
@@ -65,7 +65,7 @@
   # Optional quick-link buttons (show as buttons if present)
   paper_url: "https://doi.org/10.1242/bio.062126"
   repo_url:  "https://github.com/SlicerMorph/SlicerPhotogrammetry"
-  demo_url:  "https://github.com/SlicerMorph/SlicerPhotogrammetry"   # optional
+  #demo_url:  "https://github.com/SlicerMorph/SlicerPhotogrammetry"   # optional
 
   # Optional full citation string (shown under buttons)
   publication: "Thomas, O. O., Zhang, C., & Maga, A. M. (2025). SlicerMorph photogrammetry: An open‑source photogrammetry workflow for reconstructing 3D models. *Biology Open, 14*, bio062126. https://doi.org/10.1242/bio.062126"
