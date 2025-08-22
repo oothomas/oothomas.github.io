@@ -33,7 +33,7 @@ title: "Home"
   </div>
   <div class="publication">
     <h4>SlicerMorph photogrammetry: An open-source photogrammetry workflow for reconstructing 3D models</h4>
-    <p>Thomas, O. O., Zhang, C., &amp; Maga, A. M. (2025). <em>Biology Open</em>, 14, bio062126. In Press. <a href="https://doi.org/10.1242/bio.062126" target="_blank">https://doi.org/10.1242/bio.062126</a></p>
+    <p>Thomas, O. O., Zhang, C., &amp; Maga, A. M. (2025). <em>Biology Open</em>, 14, bio062126. <a href="https://doi.org/10.1242/bio.062126" target="_blank">https://doi.org/10.1242/bio.062126</a></p>
   </div>
   <div class="publication">
     <h4>Leveraging descriptor learning and functional map-based shape matching for automated anatomical landmarking in mouse mandibles</h4>
