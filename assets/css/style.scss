@@ -12,3 +12,6 @@ header p:not(.view) {
   font-size: 150%;
   width: 100%;
 }
+
+/* Include project gallery styles so colors render consistently */
+@import url("projects.css");
