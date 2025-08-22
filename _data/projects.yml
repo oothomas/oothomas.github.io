@@ -128,16 +128,17 @@
 - title: "morphVQ: Functional-Map Morphometrics for Automated Phenotyping"
   description: >
     morphVQ replaces manual landmarking with learned surface descriptors and functional maps to quantify
-    whole‑mesh shape variation with minimal observer bias. After light rigid alignment, the pipeline learns
-    dense non‑rigid correspondences between specimens and refines them with Consistent ZoomOut, producing
-    two interpretable latent operators—area‑based and conformal (angular) latent shape‑space differences
-    (LSSDs). These capture surface‑wide expansions, contractions, and angular changes that drive biological
-    variation.
-    In head‑to‑head comparisons, LSSDs match or exceed modern 3DGM and auto3DGM on downstream tasks
-    (e.g., Genus‑level classification), while being more computationally efficient and preserving far more of
-    the true surface morphology. Shape spaces derived from morphVQ closely mirror expert landmark pipelines,
-    and distinctiveness functions localize which anatomical regions separate groups—turning correspondences
-    into spatially grounded evidence.
+    whole‑mesh shape variation with minimal observer bias. Most 3D shape analysis still relies on experts
+    clicking landmarks—slow, biased, and blind to much of the surface. morphVQ replaces that with an automated 
+    pipeline that learns dense correspondences across whole meshes and summarizes shape as surface‑wide expansions, 
+    contractions, and angle changes—compact, interpretable descriptors.
+    
+    Why it’s interesting: It scales unbiased quantification to large cohorts. On primate bones, morphVQ matched landmark 
+    pipelines while capturing more detail and running faster. It also projects “where the differences are” back onto the surface for review.
+
+    Impact: Beyond comparative anatomy, teams in medical imaging, preclinical phenotyping, surgical planning, and device design 
+    can trade manual clicks for reproducible, full‑surface metrics. For ML teams, it showcases geometric deep learning for 
+    correspondence learning and interpretable features—cleanly packaged for adoption in research or production.
 
   # Optional quick-link buttons (show as buttons if present)
   paper_url: "https://doi.org/10.1371/journal.pcbi.1009061"
