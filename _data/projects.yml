@@ -81,32 +81,18 @@
 
 - title: "Spatially & Spectrally Consistent morphVQ: Functional‑Map Landmarking for Mouse Mandibles"
   description: |
-    This project develops an automated pipeline for anatomical landmark placement on 3D mouse
-    hemi‑mandibles using descriptor learning and the functional map (FMap) framework. Instead of
-    supervising to landmarks, the model learns intrinsic shape descriptors and dense functional
-    correspondences in an unsupervised fashion, then recovers point‑to‑point maps to transfer
-    landmarks across specimens. The workflow removes the need for rigid pre‑alignment and targets
-    speed, accuracy, and generalizability.
-
-    Methodologically, three upgrades over prior morphVQ are key: (1) orientation‑preserving Complex
-    FMaps to avoid symmetry flips and eliminate pre‑alignment; (2) DiffusionNet for robust per‑vertex
-    descriptors across mesh resolutions and surface complexities; and (3) spatial + spectral cycle
-    consistency during Deep Functional Maps (DFMaps) training to enforce near‑bijective mappings and
-    reduce post‑hoc refinement. Training is pairwise on meshes (LBO basis, WKS inputs), and dense
-    correspondences are converted to landmark estimates via nearest‑neighbor transfer, aggregated with
-    median selection for stability.
-
-    Findings on a 425‑specimen mandible dataset show that the approach is faster than MALPACA while
-    maintaining competitive accuracy. Although MALPACA often yields the lowest RMSE, AutoLandmark‑FM
-    performs comparably—especially with smaller training sets—indicating strong generalization and
-    practical viability. Visual checks confirm that automated placements typically fall within the
-    acceptable range observed for MALPACA estimates.
-
-    By combining unsupervised descriptor learning with functional correspondences, the
-    pipeline scales landmarking to large cohorts, reduces manual effort, and flexibly adapts as
-    hypotheses change (no re‑digitizing required). The result is a reproducible, high‑throughput
-    alternative for morphometrics that plays nicely with open‑source tooling (e.g., 3D Slicer/SlicerMorph)
-    and downstream statistical or ML analyses.
+    Manual landmarking slows morphometrics and bakes in bias. This paper delivers an automated, unsupervised pipeline that learns dense 
+    correspondences across mandibles and then reads off canonical landmarks, eliminating rigid pre‑alignment. 
+    
+    Using orientation‑preserving complex functional maps, DiffusionNet descriptors, and spatial/spectral cycle‑consistency, 
+    the model places landmarks with accuracy competitive with MALPACA while running faster and robust on small training sets. 
+    Validation spans 425 hemi‑mandibles from micro‑CT.
+    
+    Landmarks encode a hypothesis; changing that hypothesis usually means re‑annotating everything. 
+    Here, once correspondences are learned, you can regenerate any landmark set—classical or custom—without relabeling, turning landmarking into a query rather than a 
+    bottleneck.
+    This enables scalable morphometrics for evo‑devo genetics, QTL mapping, and phenome‑wide screens, 
+    and translates to dental/orthopedic planning and preclinical pipelines where fast, consistent, anatomy‑aware points are essential.
 
   # Optional quick-link buttons (show as buttons if present)
   paper_url: "https://onlinelibrary.wiley.com/doi/10.1111/joa.14196"
