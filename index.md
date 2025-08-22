@@ -14,6 +14,7 @@ title: "Home"
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.15.1/devicon.min.css">
 <link rel="stylesheet" href="{{ '/assets/css/skills.css' | relative_url }}">
+<link rel="stylesheet" href="{{ '/assets/css/publications.css' | relative_url }}">
 
 {% include nav.html %}
 
@@ -22,6 +23,27 @@ title: "Home"
      alt="Skills banner"
      width="1200" height="314"
      style="display:block; margin:0 auto; width:100%; max-width:1200px; height:auto;">
+
+<h2 id="publications">📚 Publications</h2>
+<h3>Peer-Reviewed Publications</h3>
+<div class="pub-list">
+  <div class="publication">
+    <h4>Trustworthy detection of exencephaly in high-throughput micro-CT embryo screens with focal-loss transformers</h4>
+    <p>Thomas, O. O., Roston, R., Shen, H., &amp; Maga, A. M. (2025). <em>BioRxiv</em> (In Review: PLOS Computational Biology). <a href="https://doi.org/10.1101/2025.08.12.669840" target="_blank">https://doi.org/10.1101/2025.08.12.669840</a></p>
+  </div>
+  <div class="publication">
+    <h4>SlicerMorph photogrammetry: An open-source photogrammetry workflow for reconstructing 3D models</h4>
+    <p>Thomas, O. O., Zhang, C., &amp; Maga, A. M. (2025). <em>Biology Open</em>, 14, bio062126. In Press. <a href="https://doi.org/10.1242/bio.062126" target="_blank">https://doi.org/10.1242/bio.062126</a></p>
+  </div>
+  <div class="publication">
+    <h4>Leveraging descriptor learning and functional map-based shape matching for automated anatomical landmarking in mouse mandibles</h4>
+    <p>Thomas, O. O., &amp; Maga, A. M. (2025). <em>Journal of Anatomy</em>, 00, 1–17. <a href="https://doi.org/10.1111/joa.14196" target="_blank">https://doi.org/10.1111/joa.14196</a></p>
+  </div>
+  <div class="publication">
+    <h4>Automated morphological phenotyping using learned shape descriptors and functional maps: A novel approach to geometric morphometrics</h4>
+    <p>Thomas, O. O., Shen, H., Raaum, R. L., Harcourt-Smith, W. H. E., Polk, J. D., &amp; Hasegawa-Johnson, M. (2023). <em>PLOS Computational Biology</em>, 19(1), e1009061.</p>
+  </div>
+</div>
 
 <!-- no <hr> here to avoid the white line above Projects -->
 
