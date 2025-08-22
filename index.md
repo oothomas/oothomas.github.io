@@ -25,6 +25,13 @@ title: "Home"
 
 <!-- no <hr> here to avoid the white line above Projects -->
 
+<h2 id="projects">🚀 Featured Work</h2>
+
+<!-- Standard include (no full-bleed wrapper) -->
+{% include projects.html %}
+
+<!-- no <hr> here either -->
+
 <h2 id="skills-and-expertise">🛠️ Skills and Expertise</h2>
 <!-- Introductory Focus/Throughline Highlight -->
 <div class="focus-box">
@@ -114,13 +121,6 @@ title: "Home"
     </ul>
   </div>
 </div>
-
-<!-- no <hr> here either -->
-
-<h2 id="projects">🚀 Featured Work</h2>
-
-<!-- Standard include (no full-bleed wrapper) -->
-{% include projects.html %}
 
 <hr>
 
