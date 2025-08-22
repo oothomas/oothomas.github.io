@@ -79,7 +79,7 @@
       full:  "assets/images/projects/slicerphotogrammetry-compare-full.png"
       caption: "Side‑by‑side reconstructions with deviation heatmaps versus micro‑CT; the updated pipeline reduces artifacts around thin structures (e.g., zygomatic arches) and lowers mean/RMSE errors."
 
-- title: "AutoLandmark‑FM: Functional‑Map Landmarking for Mouse Mandibles"
+- title: "Spatially & Spectrally Consistent morphVQ: Functional‑Map Landmarking for Mouse Mandibles"
   description: |
     This project develops an automated pipeline for anatomical landmark placement on 3D mouse
     hemi‑mandibles using descriptor learning and the functional map (FMap) framework. Instead of
