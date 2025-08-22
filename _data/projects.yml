@@ -1,5 +1,5 @@
 - title: "Trustworthy Exencephaly Detection with Focal‑Loss Transformers"
-  description: >
+  description: |
     We build an imbalance‑aware, interpretable pipeline to detect exencephaly in late‑gestation
     mouse embryos from high‑throughput diceCT volumes. A self‑supervised transformer (modified M3T)
     is fine‑tuned under three regimes—cross‑entropy (CE‑Large), focal‑loss equal‑capacity (FL‑Large),
@@ -40,7 +40,7 @@
 
 
 - title: "SlicerMorph Photogrammetry: SAM‑NodeODM Pipeline for High‑Fidelity 3D Specimens"
-  description: >
+  description: |
     This project delivers a fully open, end‑to‑end photogrammetry workflow inside 3D Slicer that
     integrates automatic image masking via the Segment Anything Model (SAM) with surface reconstruction
     using OpenDroneMap’s NodeODM, wrapped in a user‑friendly Slicer extension. The module unifies image
@@ -80,7 +80,7 @@
       caption: "Side‑by‑side reconstructions with deviation heatmaps versus micro‑CT; the updated pipeline reduces artifacts around thin structures (e.g., zygomatic arches) and lowers mean/RMSE errors."
 
 - title: "AutoLandmark‑FM: Functional‑Map Landmarking for Mouse Mandibles"
-  description: >
+  description: |
     This project develops an automated pipeline for anatomical landmark placement on 3D mouse
     hemi‑mandibles using descriptor learning and the functional map (FMap) framework. Instead of
     supervising to landmarks, the model learns intrinsic shape descriptors and dense functional
@@ -126,7 +126,7 @@
       caption: "FMAP's estimates (green) closely align with both MALPACA's (red) and the ground truth (blue), with deviations within expected human error. The model effectively estimates landmarks on 3D anatomical structures, advancing morphometric analysis by integrating geometry processing and deep-learning techniques."
 
 - title: "morphVQ: Functional-Map Morphometrics for Automated Phenotyping"
-  description: >
+  description: |
     morphVQ replaces manual landmarking with learned surface descriptors and functional maps to quantify
     whole‑mesh shape variation with minimal observer bias. Most 3D shape analysis still relies on experts
     clicking landmarks—slow, biased, and blind to much of the surface. morphVQ replaces that with an automated 
