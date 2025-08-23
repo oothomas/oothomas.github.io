@@ -15,6 +15,7 @@ title: "Home"
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.15.1/devicon.min.css">
 <link rel="stylesheet" href="{{ '/assets/css/skills.css' | relative_url }}">
 <link rel="stylesheet" href="{{ '/assets/css/publications.css' | relative_url }}">
+<link rel="stylesheet" href="{{ '/assets/css/experience.css' | relative_url }}">
 
 {% include nav.html %}
 
@@ -42,6 +43,43 @@ title: "Home"
   <div class="publication">
     <h4>Automated morphological phenotyping using learned shape descriptors and functional maps: A novel approach to geometric morphometrics</h4>
     <p>Thomas, O. O., Shen, H., Raaum, R. L., Harcourt-Smith, W. H. E., Polk, J. D., &amp; Hasegawa-Johnson, M. (2023). <em>PLOS Computational Biology</em>, 19(1), e1009061. <a href="https://doi.org/10.1371/journal.pcbi.1009061" target="_blank">https://doi.org/10.1371/journal.pcbi.1009061</a></p>
+  </div>
+</div>
+
+<!-- Experience section -->
+<h2 id="experience">💼 Experience</h2>
+<div class="experience-list">
+  <div class="experience-item">
+    <h3>Postdoctoral Fellow</h3>
+    <p class="meta">Seattle Children’s Research Institute &amp; The Imageomics Institute, Seattle, WA (09/2023–Present)</p>
+    <ul>
+      <li>Built end-to-end pipelines for micro-CT embryo analysis (NIfTI), covering segmentation, classification, detection, and registration; packaged with Docker/MLflow for reproducibility and cloud training.</li>
+      <li>Designed and published a 3D Slicer extension integrating SAM-based segmentation with WebODM photogrammetry, cutting 3D reconstruction error by ~15% on fragile specimens; enabled volume-to-mesh workflows for downstream analysis.</li>
+      <li>Developed focal-loss Vision Transformer models for neural tube defect (exencephaly) detection under extreme class imbalance; improved AUPRC and stabilized XAI saliency.</li>
+      <li>Automated functional-map-based landmarking for 3D morphology, boosting reproducibility and throughput; integrated experiment tracking (MLflow) and artifact versioning.</li>
+      <li>Led monthly training on medical imaging ML (3D CNNs, ViTs, SSL, Photogrammetry), supporting cross-functional teams.</li>
+    </ul>
+  </div>
+  <div class="experience-item">
+    <h3>Research Assistant</h3>
+    <p class="meta">Speech Technology Group, Coordinated Science Lab, Grainger College of Engineering, UIUC (09/2021–08/2023)</p>
+    <ul>
+      <li>Adapted Transformer architectures with XAI for high-dimensional gait/kinematics; delivered interpretable, production-grade models and validation reports.</li>
+    </ul>
+  </div>
+  <div class="experience-item">
+    <h3>Research Assistant</h3>
+    <p class="meta">Evolutionary Biomechanics Lab, Department of Anthropology, UIUC (09/2017–12/2018)</p>
+    <ul>
+      <li>Automated 3D trait extraction via geometry processing on surface scans; mentored students in Python computer vision workflows.</li>
+    </ul>
+  </div>
+  <div class="experience-item">
+    <h3>Research Assistant</h3>
+    <p class="meta">Immunology and Genomics Lab, Department of Anthropology, UIUC (09/2016–05/2017)</p>
+    <ul>
+      <li>Quantified skeletal traits from micro-CT; authored an R package linking genotype–phenotype at scale.</li>
+    </ul>
   </div>
 </div>
 
